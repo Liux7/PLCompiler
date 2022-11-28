@@ -4,24 +4,24 @@
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
-#include <iostream.h>
+//#include <iostream.h>
+#include <iostream>
 #include <Afxtempl.h >
 #include <malloc.h>
 
+using namespace std;
 
+#define FILENAMESIZE 2048   //ÎÄ¼þÃûµÄ×î´ó³¤¶È
+#define NUMOFWORD 30     //±£Áô×ÖµÄ¸öÊý
+#define MAXNUMOFNAMETABLE 1000  //Ãû×Ö±íµÄ×î´óÏîÊý
+#define MAXNUMOFBLOCKTABLE 100 //³ÌÐòÌå±íµÄ×î´óÏîÊý
+#define MAXNUMOFARRAYTABLE  100//Êý×éÐÅÏ¢±íµÄ×î´óÏîÊý
+#define MAXSYMNAMESIZE 255  //·ûºÅµÄ×î´ó×Ö·ûÊý
+#define MAXVARNAMESIZE 255  //±äÁ¿ÃûµÄ×î´ó×Ö·ûÊý
+#define MAXLEVELDEPTH 100   //¹ý³ÌÇ¶Ì×µÄ×î´óÉî¶È
+#define MAXNUMOFCODEADDRESS 10000  //×î´óµÄµØÖ·¿Õ¼ä
 
-#define FILENAMESIZE 512    //æ–‡ä»¶åçš„æœ€å¤§é•¿åº¦
-#define NUMOFWORD 19        //ä¿ç•™å­—çš„ä¸ªæ•°
-#define MAXNUMOFNAMETABLE 1000  //åå­—è¡¨çš„æœ€å¤§é¡¹æ•°
-#define MAXNUMOFBLOCKTABLE 100 //ç¨‹åºä½“è¡¨çš„æœ€å¤§é¡¹æ•°
-#define MAXNUMOFARRAYTABLE  100//æ•°ç»„ä¿¡æ¯è¡¨çš„æœ€å¤§é¡¹æ•°
-#define MAXSYMNAMESIZE 255  //ç¬¦å·çš„æœ€å¤§å­—ç¬¦æ•°
-#define MAXVARNAMESIZE 255  //å˜é‡åçš„æœ€å¤§å­—ç¬¦æ•°
-#define MAXLEVELDEPTH 100   //è¿‡ç¨‹åµŒå¥—çš„æœ€å¤§æ·±åº¦
-#define MAXNUMOFCODEADDRESS 10000  //æœ€å¤§çš„åœ°å€ç©ºé—´
-
-
-typedef enum _SYMBOL  //ç¬¦å·çš„å®šä¹‰
+typedef enum _SYMBOL  //·ûºÅµÄ¶¨Òå
 {
 	NUL,//0
 	IDENT,//1
@@ -65,7 +65,14 @@ typedef enum _SYMBOL  //ç¬¦å·çš„å®šä¹‰
 	TYPESYM,//39
     VARSYM,//40
 	PROCSYM,//41
-	DPOINT//42
+	DPOINT,//42
+	FORSYM,//43
+	TOSYM,//44
+	REPEATSYM,//45
+	UNTILSYM,//46
+	CASESYM,//47
+	PLUSBECOMES,//48
+	MINUSBECOMES,//49
 } SYMBOL;
 
 
@@ -79,34 +86,35 @@ SYMLIST DECLBEGSYS,STATBEGSYS,FACBEGSYS,CONSTBEGSYS,TYPEBEGSYS;
 //typedef signed short int int;
 
 
-typedef enum NAMEKIND  //æ ‡è¯†ç¬¦çš„ç§ç±»çš„å®šä¹‰
+typedef enum NAMEKIND  //±êÊ¶·ûµÄÖÖÀàµÄ¶¨Òå
 {
-	KONSTANT,  //å¸¸é‡
-	TYPEL,  //æ— ç±»åž‹
-	VARIABLE,  //å˜é‡
-	PROCEDURE  //è¿‡ç¨‹å
+	KONSTANT,  //³£Á¿
+	TYPEL,  //ÎÞÀàÐÍ
+	VARIABLE,  //±äÁ¿
+	PROCEDURE  //¹ý³ÌÃû
 } OBJECT;
 
 
-typedef enum VARTYPES  //å˜é‡çš„ç±»åž‹çš„å®šä¹‰
+typedef enum VARTYPES  //±äÁ¿µÄÀàÐÍµÄ¶¨Òå
 {
-	NOTYP,  //ï¼ˆæš‚æ—¶ï¼‰æ²¡æœ‰ç±»åž‹
-	INTS,  //æ•´æ•°ç±»åž‹
-	CHARS,  //å­—ç¬¦ç±»åž‹
-	BOOLS,  //å¸ƒå°”ç±»åž‹
-	ARRAYS  //æ•°ç»„ç±»åž‹
+	NOTYP,  //£¨ÔÝÊ±£©Ã»ÓÐÀàÐÍ
+	INTS,  //ÕûÊýÀàÐÍ
+	REALS,//ÊµÊý
+	CHARS,  //×Ö·ûÀàÐÍ
+	BOOLS,  //²¼¶ûÀàÐÍ
+	ARRAYS  //Êý×éÀàÐÍ
 } TYPES;
 
 
-typedef enum _OPCOD  //æ“ä½œç çš„å®šä¹‰
+typedef enum _OPCOD  //²Ù×÷ÂëµÄ¶¨Òå
 {
-	LIT,LIT1,LOD,ILOD,LODA,LODT,LODB,STO,CPYB,JMP,JPC,RED,WRT,CAL,RETP,UDIS,OPAC,ENTP,
+	LIT,LIT1,LOD,ILOD,LODA,LODT,LODB,STO,CPYB,JMP,JPC,RED,WRT,CAL1,RETP,UDIS,OPAC,ENTP,
 	ENDP,ANDS,ORS,NOTS,IMOD,MUS,ADD,ADD1,SUB,MULT,IDIV,EQ,NE,LS,LE,GT,GE
 } OPCOD;
 
 
 
-typedef struct _TYPEITEM  //è¾…åŠ©èŠ‚ç‚¹å®šä¹‰
+typedef struct _TYPEITEM  //¸¨Öú½Úµã¶¨Òå
 {
 	TYPES typ;
 	int ref;
@@ -118,35 +126,41 @@ typedef struct _CONSTREC
 	int value;
 } CONSTREC;
 
+enum object {
+	constant,
+	variable,
+	procedur,
+	charcon,//×Ö·ûÐÍ
+	realcon,//ÊµÐÍ
+};
 
-
-typedef struct SYMBOL_ITEM  //ä»Žæºæ–‡ä»¶è¯»å‡ºçš„ç¬¦å·é“¾è¡¨é‡Œé¢çš„èŠ‚ç‚¹çš„å®šä¹‰
+typedef struct SYMBOL_ITEM  //´ÓÔ´ÎÄ¼þ¶Á³öµÄ·ûºÅÁ´±íÀïÃæµÄ½ÚµãµÄ¶¨Òå
 {
-	int lineNumber;  //ç¬¦å·æ‰€å¤„çš„è¡Œæ•°
-	SYMBOL type;  //ç¬¦å·çš„ç±»åž‹
-	union SYMBOL_VALUE  //æ ¹æ®ä¸åŒçš„ç¬¦å·ç±»åž‹ç¬¦å·å¯ä»¥æœ‰ä¸åŒçš„ç±»åž‹çš„å€¼
+	int lineNumber;  //·ûºÅËù´¦µÄÐÐÊý
+	SYMBOL type;  //·ûºÅµÄÀàÐÍ
+	union SYMBOL_VALUE  //¸ù¾Ý²»Í¬µÄ·ûºÅÀàÐÍ·ûºÅ¿ÉÒÔÓÐ²»Í¬µÄÀàÐÍµÄÖµ
 	{
-		int iValue;  //å¦‚æžœæ˜¯æ•´æ•°å¸¸é‡æˆ–è€…å­—ç¬¦å¸¸é‡ï¼Œåˆ™å­˜æ”¾å…¶å€¼
-		char * lpValue;  //å¦‚æžœæ˜¯ç¬¦å·ï¼Œåˆ™å­˜æ”¾å…¶é¦–å­—ç¬¦çš„åœ°å€
+		int iValue;  //Èç¹ûÊÇÕûÊý³£Á¿»òÕß×Ö·û³£Á¿£¬Ôò´æ·ÅÆäÖµ
+		char * lpValue;  //Èç¹ûÊÇ·ûºÅ£¬Ôò´æ·ÅÆäÊ××Ö·ûµÄµØÖ·
 	}value;
-	struct SYMBOL_ITEM *next;  //æŒ‡å‘ä¸‹ä¸€ä¸ªèŠ‚ç‚¹
+	struct SYMBOL_ITEM *next;  //Ö¸ÏòÏÂÒ»¸ö½Úµã
 }SymbolItem;
 
 
 
-typedef struct _INSTRUCTION  //æŒ‡ä»¤ç»“æž„å®šä¹‰
+typedef struct _INSTRUCTION  //Ö¸Áî½á¹¹¶¨Òå
 {
 	int lineNumber;
 	OPCOD func;
 	int level;
 	int address;
 } INSTRUCTION;
-INSTRUCTION CODE[MAXNUMOFCODEADDRESS];  //æŒ‡ä»¤æ•°ç»„å®šä¹‰
-int CX;  //æŒ‡ä»¤æ•°ç»„ç´¢å¼•
+INSTRUCTION CODE[MAXNUMOFCODEADDRESS];  //Ö¸ÁîÊý×é¶¨Òå
+int CX;  //Ö¸ÁîÊý×éË÷Òý
 
 
 
-typedef struct _NAMETABITEM  //åå­—è¡¨é‡Œé¢çš„çºªå½•çš„å®šä¹‰
+typedef struct _NAMETABITEM  //Ãû×Ö±íÀïÃæµÄ¼ÍÂ¼µÄ¶¨Òå
 {
 	char name[MAXSYMNAMESIZE];
 	OBJECT kind;
@@ -154,36 +168,36 @@ typedef struct _NAMETABITEM  //åå­—è¡¨é‡Œé¢çš„çºªå½•çš„å®šä¹‰
 	int level;
 	int normal;
 	int ref;
-	union SYMBOL_VALUE  //æ ¹æ®ä¸åŒçš„ç¬¦å·ç±»åž‹ç¬¦å·å¯ä»¥æœ‰ä¸åŒçš„ç±»åž‹çš„å€¼
+	union SYMBOL_VALUE  //¸ù¾Ý²»Í¬µÄ·ûºÅÀàÐÍ·ûºÅ¿ÉÒÔÓÐ²»Í¬µÄÀàÐÍµÄÖµ
 	{
-		int value;  //å¦‚æžœæ˜¯æ•´æ•°å¸¸é‡æˆ–è€…å­—ç¬¦å¸¸é‡ï¼Œåˆ™å­˜æ”¾å…¶å€¼
+		int value;  //Èç¹ûÊÇÕûÊý³£Á¿»òÕß×Ö·û³£Á¿£¬Ôò´æ·ÅÆäÖµ
 		int size;
 		int address;
 	}unite;
 	int link;
-	//struct NAMETAB_ITEM *Next;
+	struct NAMETAB_ITEM *Next;
 }NAMETABITEM;
-NAMETABITEM NAMETAB[MAXNUMOFNAMETABLE];  //åå­—è¡¨å®šä¹‰
-int TX; //åå­—è¡¨ç´¢å¼•
+NAMETABITEM NAMETAB[MAXNUMOFNAMETABLE];  //Ãû×Ö±í¶¨Òå
+int TX; //Ãû×Ö±íË÷Òý
 
 
 
-typedef struct PROGRAM_BLOCK_ITEM  //ç¨‹åºä½“è¡¨é‡Œçš„çºªå½•çš„çš„å®šä¹‰
+typedef struct PROGRAM_BLOCK_ITEM  //³ÌÐòÌå±íÀïµÄ¼ÍÂ¼µÄµÄ¶¨Òå
 {
 	int lastPar;
 	int last;
 	int pSize;
 	int vSize;
-	//struct PROGRAM_BLOCK_ITEM *Next;
+	struct PROGRAM_BLOCK_ITEM *Next;
 }BLOCKITEM;
-BLOCKITEM BTAB[MAXNUMOFBLOCKTABLE];  //ç¨‹åºè¡¨å®šä¹‰
-int BX;  //ç¨‹åºä½“è¡¨ç´¢å¼•
+BLOCKITEM BTAB[MAXNUMOFBLOCKTABLE];  //³ÌÐò±í¶¨Òå
+int BX;  //³ÌÐòÌå±íË÷Òý
 
 
 
 
 
-typedef struct ARRAY_INFORMATION_ITEM  //æ•°ç»„ä¿¡æ¯è¡¨å®šä¹‰
+typedef struct ARRAY_INFORMATION_ITEM  //Êý×éÐÅÏ¢±í¶¨Òå
 {
 	TYPES intType;
 	TYPES eleType;
@@ -192,56 +206,56 @@ typedef struct ARRAY_INFORMATION_ITEM  //æ•°ç»„ä¿¡æ¯è¡¨å®šä¹‰
 	int elSize;
 	int size;
 	int elRef;
-	//struct ARRAY_INFORMATION_ITEM *Next;
+	struct ARRAY_INFORMATION_ITEM *Next;
 }ARRAYITEM;
-ARRAYITEM  ATAB[MAXNUMOFARRAYTABLE];  //æ•°ç»„ä¿¡æ¯è¡¨å®šä¹‰
-int AX;  //æ•°ç»„ä¿¡æ¯è¡¨ç´¢å¼•
+ARRAYITEM  ATAB[MAXNUMOFARRAYTABLE];  //Êý×éÐÅÏ¢±í¶¨Òå
+int AX;  //Êý×éÐÅÏ¢±íË÷Òý
 
 
 
-int JUMADRTAB[300];  //è·³è½¬è¡¨çš„å®šä¹‰
-int JX;  //è·³è½¬è¡¨ç´¢å¼•
+int JUMADRTAB[300];  //Ìø×ª±íµÄ¶¨Òå
+int JX;  //Ìø×ª±íË÷Òý
 
 
 
-int DISPLAY[MAXLEVELDEPTH];  //DISPLAYè¡¨å®šä¹‰
-int displayLevel;  //DISPLAYè¡¨çš„ç´¢å¼•
+int DISPLAY[MAXLEVELDEPTH];  //DISPLAY±í¶¨Òå
+int displayLevel;  //DISPLAY±íµÄË÷Òý
 
-int DX;//æ•°æ®ç©ºé—´åˆ†é…çš„æŒ‡ç¤ºå™¨,æ¯ä¸ªç¨‹åºä½“éƒ½è¦ç”¨åˆ°ä¸€æ¬¡
+int DX;//Êý¾Ý¿Õ¼ä·ÖÅäµÄÖ¸Ê¾Æ÷,Ã¿¸ö³ÌÐòÌå¶¼ÒªÓÃµ½Ò»´Î
 
 //#include "global.h"
 //#include "symlist.h"
 char ObjCodeScript[GE+1][1000]=
 {
-	"LIT    %4d ,%4d      ------>  è£…å…¥å¸¸é‡",
-	"LIT1   %4d ,%4d      ------>  è£…å…¥å¸¸é‡ï¼ˆç”¨äºŽè®¡ç®—æ•°ç»„å…ƒç´ åœ°å€ï¼‰",
-	"LOD    %4d ,%4d      ------>  è£…å…¥å˜é‡å€¼",
-	"ILOD   %4d ,%4d      ------>  é—´æŽ¥è£…å…¥",
-	"LODA   %4d ,%4d      ------>  è£…å…¥å˜é‡åœ°å€",
-	"LODT   %4d ,%4d      ------>  è£…å…¥æ ˆé¡¶å€¼ä¸ºåœ°å€çš„å†…å®¹",
-	"LODB   %4d ,%4d      ------>  è£…å…¥é•¿åº¦ä¸ºAçš„å—",
-	"STO    %4d ,%4d      ------>  å°†æ ˆé¡¶å€¼å­˜å…¥æ ˆé¡¶æ¬¡å€¼æ‰€æŒ‡å•å…ƒ",
-	"CPYB   %4d ,%4d      ------>  ä¼ é€é•¿åº¦ä¸ºAçš„å—",
-	"JMP    %4d ,%4d      ------>  æ— æ¡ä»¶è·³è½¬",
-	"JPC    %4d ,%4d      ------>  æ ˆé¡¶å€¼ä¸º0æ—¶è·³è½¬",
-	"READ   %4d ,%4d      ------>  è¯»æŒ‡ä»¤",
-	"WRITE  %4d ,%4d      ------>  å†™æŒ‡ä»¤",
-	"CALL   %4d ,%4d      ------>  è½¬å­",
-	"RETP   %4d ,%4d      ------>  è¿‡ç¨‹è¿”å›ž",
-	"UDIS   %4d ,%4d      ------>  è°ƒæ•´Display",
-	"OPAC   %4d ,%4d      ------>  æ‰“å¼€æ´»åŠ¨è®°å½•",
-	"ENTP   %4d ,%4d      ------>  è¿›å…¥è¿‡ç¨‹",
-	"ENDP   %4d ,%4d      ------>  ç¨‹åºç»“æŸ",
-	"AND    %4d ,%4d      ------>  ä¸Ž",
-	"OR     %4d ,%4d      ------>  æˆ–",
-	"NOT    %4d ,%4d      ------>  éž",
-	"IMOD   %4d ,%4d      ------>  æ¨¡",
-	"MUS    %4d ,%4d      ------>  æ±‚è´Ÿ",
-	"ADD    %4d ,%4d      ------>  åŠ ",
-    "ADD1   %4d ,%4d      ------>  åŠ ï¼ˆç”¨äºŽè®¡ç®—æ•°ç»„å…ƒç´ åœ°å€ï¼‰",
-	"SUB    %4d ,%4d      ------>  å‡",
-	"MULT   %4d ,%4d      ------>  ä¹˜",
-	"IDIV   %4d ,%4d      ------>  é™¤",
+	"LIT    %4d ,%4d      ------>  ×°Èë³£Á¿",
+	"LIT1   %4d ,%4d      ------>  ×°Èë³£Á¿£¨ÓÃÓÚ¼ÆËãÊý×éÔªËØµØÖ·£©",
+	"LOD    %4d ,%4d      ------>  ×°Èë±äÁ¿Öµ",
+	"ILOD   %4d ,%4d      ------>  ¼ä½Ó×°Èë",
+	"LODA   %4d ,%4d      ------>  ×°Èë±äÁ¿µØÖ·",
+	"LODT   %4d ,%4d      ------>  ×°ÈëÕ»¶¥ÖµÎªµØÖ·µÄÄÚÈÝ",
+	"LODB   %4d ,%4d      ------>  ×°Èë³¤¶ÈÎªAµÄ¿é",
+	"STO    %4d ,%4d      ------>  ½«Õ»¶¥Öµ´æÈëÕ»¶¥´ÎÖµËùÖ¸µ¥Ôª",
+	"CPYB   %4d ,%4d      ------>  ´«ËÍ³¤¶ÈÎªAµÄ¿é",
+	"JMP    %4d ,%4d      ------>  ÎÞÌõ¼þÌø×ª",
+	"JPC    %4d ,%4d      ------>  Õ»¶¥ÖµÎª0Ê±Ìø×ª",
+	"READ   %4d ,%4d      ------>  ¶ÁÖ¸Áî",
+	"WRITE  %4d ,%4d      ------>  Ð´Ö¸Áî",
+	"CALL   %4d ,%4d      ------>  ×ª×Ó",
+	"RETP   %4d ,%4d      ------>  ¹ý³Ì·µ»Ø",
+	"UDIS   %4d ,%4d      ------>  µ÷ÕûDisplay",
+	"OPAC   %4d ,%4d      ------>  ´ò¿ª»î¶¯¼ÇÂ¼",
+	"ENTP   %4d ,%4d      ------>  ½øÈë¹ý³Ì",
+	"ENDP   %4d ,%4d      ------>  ³ÌÐò½áÊø",
+	"AND    %4d ,%4d      ------>  Óë",
+	"OR     %4d ,%4d      ------>  »ò",
+	"NOT    %4d ,%4d      ------>  ·Ç",
+	"IMOD   %4d ,%4d      ------>  Ä£",
+	"MUS    %4d ,%4d      ------>  Çó¸º",
+	"ADD    %4d ,%4d      ------>  ¼Ó",
+    "ADD1   %4d ,%4d      ------>  ¼Ó£¨ÓÃÓÚ¼ÆËãÊý×éÔªËØµØÖ·£©",
+	"SUB    %4d ,%4d      ------>  ¼õ",
+	"MULT   %4d ,%4d      ------>  ³Ë",
+	"IDIV   %4d ,%4d      ------>  ³ý",
 	"EQ     %4d ,%4d      ------>  ==",
 	"NEQ    %4d ,%4d      ------>  !=",
 	"LSS    %4d ,%4d      ------>  <",

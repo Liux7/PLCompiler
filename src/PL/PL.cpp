@@ -1,9 +1,11 @@
 // PL.cpp : Defines the entry point for the console application.
 //
+
+#pragma warning(disable:4996)
 #include "common.h"
 
 ////////////////////////////////////////////////////////////
-////////////////////////å‡½æ•°å¤´å®šä¹‰å¦‚ä¸‹//////////////////////
+////////////////////////º¯ÊıÍ·¶¨ÒåÈçÏÂ//////////////////////
 ////////////////////////////////////////////////////////////
 
 SYMLIST * listsAdd(SYMLIST * list1,SYMLIST * list2);
@@ -11,58 +13,62 @@ SYMLIST * listAddSym(SYMLIST * list,SYMBOL sym);
 int SYMINLIST(SYMBOL sym,SYMLIST * list);
 void COPYLIST(SYMLIST * list1,SYMLIST * list2);
 
-void error(int);
+void error(int);//¸ºÔğÏÔÊ¾³ö´íĞÅÏ¢µÄº¯Êı
+void INITIAL();//±àÒë³ÌĞò³õÊ¼»¯
+//void ENTERID();
+//ĞŞ¸Ä
+void ENTERID(const char* name, OBJECT kind, TYPES type, int value); //Ïò·ûºÅ±íÖĞÌîÈëĞÅÏ¢ÒªÓÃµÄº¯Êı
+void ENTERPREID();//Ô¤ÏÈÌîÈë·ûºÅ±íµÄĞÅÏ¢£¬½«ÕâĞ©ĞÅÏ¢×÷Îª¡°¹ı³ÌÁã¡±ÀïÃæµÄÊı¾İ
+
+void getSymbols(FILE *);//´ÓÔ´ÎÄ¼ş¶ÁÈë×Ö·û£¬»ñµÃ·ûºÅÁ´±í
+void getASymbol();//²ÉÓÃµİ¹éÏÂ½µµÄÓï·¨·ÖÎö£¬Öğ¸öµÄ»ñÈ¡Ò»¸öµ¥´Ê·ûºÅ
+void destroySymbols();//±àÒëÍê±Ï£¬½«·ûºÅÁ´±íÊÍ·Å
+ 
+void GEN(OPCOD func,int level,int address);//½«²úÉúµÄ±£´æµ½´úÂëÊı×éCODEÀïÃæ
+void WriteObjCode(char *); //½«²úÉúµÄ´úÂëĞ´½ø*.pldÎÄ¼şÀïÃæ£¨¶ş½øÖÆĞÎÊ½£©
+void WriteCodeList(char *); //½«²úÉúµÄ´úÂëĞ´½ø*.lstÎÄ¼ş£¨¿É¼û×Ö·ûĞÎÊ½£©
+
+void ENTERARRAY(SYMLIST * list,TYPES type,int low,int high);//ÏòÊı×éĞÅÏ¢±íÌîÈëÒ»¸ö±íÏî
+void ENTERBLOCK();//ÓÃÀ´Ïò³ÌĞòÌå±íÌîÈëÒ»¸ö±íÏîÒÔµÇ¼Ç´Ë¹ı³ÌÌå
+void ENTER(OBJECT object);//ÔÚ±àÒëµÄ¹ı³ÌÖĞ½«Óöµ½µÄ·ûºÅÌîÈë·ûºÅ±íÖĞ
+int GETPOSITION(char * id);//Í¨¹ı±êÊ¶·ûµÄÄÚÈİÔÚÃû×Ö±íÀïÃæ²éÕÒÆäË÷Òı
+void CONSTANT(SYMLIST * list,CONSTREC & constRec);//´ÓÔ´³ÌĞòÀïÃæ»ñÈ¡Ò»¸ö³£Á¿ÀàĞÍµÄÊı¾İ
+void ARRAYTYP(SYMLIST * list,int & aref,int & arsz); //»ñÈ¡Ò»¸öÊı×éÀàĞÍµÄĞÅÏ¢£¬´«ÒıÓÃ²ÎÊıarrayRefºÍarraySize
+void TYP(SYMLIST * list,TYPES & tp,int & rf,int & sz);//»ñÈ¡£¨µ½Ãû×Ö±íÀïÃæ²éÕÒ£©µ±Ç°µÄ±êÊ¶·ûµÄÀàĞÍĞÅÏ¢
+void PARAMENTERLIST(SYMLIST * list);//±àÒëÄ³¸ö¹ı³ÌµÄ²ÎÊıÁĞ±í
+SymbolItem* Symbols = NULL;
+SymbolItem* CurSymbol = NULL;
 int nError;
 
-void INITIAL();
-void ENTERID();
-void ENTERPREID();
+void CONSTDECLARATION(SYMLIST * list);//³£Á¿ÉùÃ÷
+void TYPEDECLARATION(SYMLIST * list);//ÀàĞÍÉùÃ÷
+void VARDECLARATION(SYMLIST * list);//±äÁ¿ÉùÃ÷
+void PROCDECLARATION(SYMLIST * list);//¹ı³ÌÉùÃ÷
 
-void getSymbols(FILE *);
-void getASymbol();
-void destroySymbols();
-SymbolItem *Symbols=NULL;
-SymbolItem *CurSymbol=NULL;
+void FACTOR(SYMLIST * list,TYPEITEM & typeItem);//»ñÈ¡ÏÂÒ»¸ö¡°Òò×Ó¡±µÄĞÅÏ¢£¬´«ÒıÓÃ²ÎÊıtypeItemÓÃÀ´±£´æĞÅÏ¢
+void TERM(SYMLIST * list,TYPEITEM & typeItem); //»ñÈ¡Ò»¸ö¡°Ïî¡±µÄĞÅÏ¢
+void SIMPLEEXPRESSION(SYMLIST * list,TYPEITEM & typeItem);//»ñÈ¡¼òµ¥±í´ïÊ½ĞÅÏ¢
+void EXPRESSION(SYMLIST * list,TYPEITEM & typeItem);//»ñÈ¡±í´ïÊ½ĞÅÏ¢
+void ARRAYELEMENT(SYMLIST * list,TYPEITEM & typeItem);//»ñÈ¡Ò»¸öÊı×éÔªËØµÄĞÅÏ¢
 
-void GEN(OPCOD func,int level,int address);
-void WriteObjCode(char *);
-void WriteCodeList(char *);
+void ASSIGNMENT(SYMLIST * list);//·ÖÎö¸³ÖµÓï¾ä
+void IFSTATEMENT(SYMLIST * list);//·ÖÎöifÓï¾ä
+void WHILESTATEMENT(SYMLIST * list); //while Óï¾äµÄ·ÖÎö
+void COMPOUND(SYMLIST * list); //begin ¿ªÍ·µÄ×éºÏÓï¾äµÄ·ÖÎö
+void STANDPROC(SYMLIST * list,int i);//Á½¸ö»ù±¾¹ı³ÌreadºÍwriteµÄµ÷ÓÃ£¬ËûÃÇÔÚ·ûºÅ±íÀïÃæ·Ö±ğÔÚµÚÁùÏîºÍµÚÆßÏî
+void CALL(SYMLIST * list); //µ÷ÓÃÓï¾äµÄ·ÖÎö
+void STATEMENT(SYMLIST * list);  //ÆÕÍ¨Óï¾äµÄ·ÖÎö£¬ÕâĞ©Óï¾äÓĞ¼¸ÖÖĞÎÊ½£¬·Ö±ğÒÔ²»Í¬µÄ±êÊ¶·û¿ªÍ·
+void BLOCK(SYMLIST * list,int level); //¹ı³ÌÌåµÄ·ÖÎö
 
-void ENTERARRAY(SYMLIST * list,TYPES type,int low,int high);
-void ENTERBLOCK();
-void ENTER(OBJECT object);
-int GETPOSITION(char * id);
-void CONSTANT(SYMLIST * list,CONSTREC & constRec);
-void ARRAYTYP(SYMLIST * list,int & aref,int & arsz);
-void TYP(SYMLIST * list,TYPES & tp,int & rf,int & sz);
-void PARAMENTERLIST(SYMLIST * list);
-
-void CONSTDECLARATION(SYMLIST * list);
-void TYPEDECLARATION(SYMLIST * list);
-void VARDECLARATION(SYMLIST * list);
-void PROCDECLARATION(SYMLIST * list);
-
-void FACTOR(SYMLIST * list,TYPEITEM & typeItem);
-void TERM(SYMLIST * list,TYPEITEM & typeItem);
-void SIMPLEEXPRESSION(SYMLIST * list,TYPEITEM & typeItem);
-void EXPRESSION(SYMLIST * list,TYPEITEM & typeItem);
-void ARRAYELEMENT(SYMLIST * list,TYPEITEM & typeItem);
-
-void ASSIGNMENT(SYMLIST * list);
-void IFSTATEMENT(SYMLIST * list);
-void WHILESTATEMENT(SYMLIST * list);
-void COMPOUND(SYMLIST * list);
-void STANDPROC(SYMLIST * list,int i);
-void CALL(SYMLIST * list);
-void STATEMENT(SYMLIST * list);
-void BLOCK(SYMLIST * list,int level);
+//Ìí¼Ó
+void REPEATSTATEMENT(SYMLIST* list);
 
 ////////////////////////////////////////////////////////////
-////////////////////å‡½æ•°è¿‡ç¨‹å®šä¹‰å¦‚ä¸‹////////////////////////
+////////////////////º¯Êı¹ı³Ì¶¨ÒåÈçÏÂ////////////////////////
 ////////////////////////////////////////////////////////////
 
-void GEN(OPCOD func,int level,int address) //å°†äº§ç”Ÿçš„ä»£ç ä¿å­˜åˆ°ä»£ç æ•°ç»„CODEé‡Œé¢
-{										   //å¹¶å°†ä»£ç ç´¢å¼•CXå¢åŠ  1	
+void GEN(OPCOD func,int level,int address) //½«²úÉúµÄ´úÂë±£´æµ½´úÂëÊı×éCODEÀïÃæ
+{										   //²¢½«´úÂëË÷ÒıCXÔö¼Ó 1	
 	static int lineNumber=0;
 	if(CX>MAXNUMOFCODEADDRESS)
 	{
@@ -70,8 +76,8 @@ void GEN(OPCOD func,int level,int address) //å°†äº§ç”Ÿçš„ä»£ç ä¿å­˜åˆ°ä»£ç æ•
 		exit(0);
 	}
 
-	printf("%d\t",lineNumber);                 //ä¸‹é¢ä¸‰ä¸ªè¯­å¥ç”¨æ¥åœ¨ç¼–è¯‘çš„è¿‡ç¨‹ä¸­æ˜¾ç¤ºä»£ç 
-	printf(ObjCodeScript[func],level,address); //æ³¨æ„ï¼šç°å®çš„ä»£ç ä¸æ˜¯å®Œå…¨çš„ï¼Œä½†æ˜¯å¯ä»¥å¸®åŠ©ç†è§£
+	printf("%d\t",lineNumber);                 //ÏÂÃæÈı¸öÓï¾äÓÃÀ´ÔÚ±àÒëµÄ¹ı³ÌÖĞÏÔÊ¾´úÂë
+	printf(ObjCodeScript[func],level,address); //×¢Òâ£ºÏÖÊµµÄ´úÂë²»ÊÇÍêÈ«µÄ£¬µ«ÊÇ¿ÉÒÔ°ïÖúÀí½â
 	printf("\n");
 
 	CODE[CX].lineNumber=lineNumber++;
@@ -83,13 +89,13 @@ void GEN(OPCOD func,int level,int address) //å°†äº§ç”Ÿçš„ä»£ç ä¿å­˜åˆ°ä»£ç æ•
 
 
 
-void WriteObjCode(char *filename)  //å°†äº§ç”Ÿçš„ä»£ç å†™è¿›*.pldæ–‡ä»¶é‡Œé¢ï¼ˆäºŒè¿›åˆ¶å½¢å¼ï¼‰
+void WriteObjCode(char *filename)  //½«²úÉúµÄ´úÂëĞ´½ø*.pldÎÄ¼şÀïÃæ£¨¶ş½øÖÆĞÎÊ½£©
 {
 	FILE *fcode;
 	
 	fcode=fopen(filename,"wb");
 	if(!fcode)
-		error(40);  //ä¸èƒ½æ‰“å¼€.pldæ–‡ä»¶
+		error(40);  //²»ÄÜ´ò¿ª.pldÎÄ¼ş
 	for(int i=0;i<CX;i++)
 	{
 		fwrite(&CODE[i].func,sizeof(OPCOD),1,fcode);
@@ -99,13 +105,13 @@ void WriteObjCode(char *filename)  //å°†äº§ç”Ÿçš„ä»£ç å†™è¿›*.pldæ–‡ä»¶é‡Œé¢ï¼
 	fclose(fcode);	
 }
 
-void WriteCodeList(char *filename)  //å°†äº§ç”Ÿçš„ä»£ç å†™è¿›*.lstæ–‡ä»¶ï¼ˆå¯è§å­—ç¬¦å½¢å¼ï¼‰
+void WriteCodeList(char *filename)  //½«²úÉúµÄ´úÂëĞ´½ø*.lstÎÄ¼ş£¨¿É¼û×Ö·ûĞÎÊ½£©
 {
 	FILE *flist;
 	
 	flist=fopen(filename,"wb");
 	if(!flist)
-		error(39);  //ä¸èƒ½æ‰“å¼€.lstæ–‡ä»¶
+		error(39);  //²»ÄÜ´ò¿ª.lstÎÄ¼ş
 	for(int i=0;i<CX;i++)
 	{
 		fprintf(flist,"%d\t",i);
@@ -115,31 +121,31 @@ void WriteCodeList(char *filename)  //å°†äº§ç”Ÿçš„ä»£ç å†™è¿›*.lstæ–‡ä»¶ï¼ˆå¯è
 	fclose(flist);
 }
 
-void WriteLabelCode(char *filename)  //å°†äº§ç”Ÿçš„ä»£ç å†™è¿›*.labæ–‡ä»¶ï¼ˆå¯è§å­—ç¬¦å½¢å¼ï¼‰
+void WriteLabelCode(char *filename)  //½«²úÉúµÄ´úÂëĞ´½ø*.labÎÄ¼ş£¨¿É¼û×Ö·ûĞÎÊ½£©
 {
 	FILE *flabel;
 	
 	flabel=fopen(filename,"wb");
 	if(!flabel)
-		error(41);  //ä¸èƒ½æ‰“å¼€.lstæ–‡ä»¶
+		error(41);  //²»ÄÜ´ò¿ª.lstÎÄ¼ş
 	for(int i=0;i<JX;i++)
 	{
-		fprintf(flabel,"ç¬¬%dé¡¹:\t",i+1);
+		fprintf(flabel,"µÚ%dÏî:\t",i+1);
 		fprintf(flabel,"%d",JUMADRTAB[i]);
 		fprintf(flabel,"\n");
 	}
 	fclose(flabel);
 }
 
-void ENTERARRAY(TYPES type,int low,int high)  //å‘æ•°ç»„ä¿¡æ¯è¡¨å¡«å…¥ä¸€ä¸ªè¡¨é¡¹
+void ENTERARRAY(TYPES type,int low,int high)  //ÏòÊı×éĞÅÏ¢±íÌîÈëÒ»¸ö±íÏî
 {
 	if(low>high)
 	{
-		error(19); //"æ•°ç»„ä¸Šä¸‹å¤§å°å…³ç³»ç•Œé”™è¯¯"
+		error(19); //"Êı×éÉÏÏÂ´óĞ¡¹ØÏµ½ç´íÎó"
 	}
 	if (AX==MAXNUMOFARRAYTABLE)
 	{
-		error(24);  //æ•°ç»„è¡¨æº¢å‡º
+		error(24);  //Êı×é±íÒç³ö
 		printf("TOO LONG ARRAYS IN PROGRAM!");
 	}
 	else
@@ -151,47 +157,47 @@ void ENTERARRAY(TYPES type,int low,int high)  //å‘æ•°ç»„ä¿¡æ¯è¡¨å¡«å…¥ä¸€ä¸ªè¡
 	}
 }
 
-void ENTERBLOCK()           //æ¯å½“ç¼–è¯‘ä¸€ä¸ªè¿‡ç¨‹å¼€å§‹æ—¶ï¼Œä¿è¯è°ƒç”¨è¯¥å‡½æ•°ä¸€æ¬¡
-{							//ç”¨æ¥å‘ç¨‹åºä½“è¡¨å¡«å…¥ä¸€ä¸ªè¡¨é¡¹ä»¥ç™»è®°æ­¤è¿‡ç¨‹ä½“
+void ENTERBLOCK()           //Ã¿µ±±àÒëÒ»¸ö¹ı³Ì¿ªÊ¼Ê±£¬±£Ö¤µ÷ÓÃ¸Ãº¯ÊıÒ»´Î
+{							//ÓÃÀ´Ïò³ÌĞòÌå±íÌîÈëÒ»¸ö±íÏîÒÔµÇ¼Ç´Ë¹ı³ÌÌå
 	if(BX==MAXNUMOFBLOCKTABLE)
 	{
-		error(26);  //ç¨‹åºä½“è¡¨æº¢å‡º
+		error(26);  //³ÌĞòÌå±íÒç³ö
 		printf("TOO MANY PROCEDURE IN PROGRAM!");
 	}
 	else
 	{
 		BX++;
-		displayLevel++;  //ç¼–è¯‘åˆ°äº†ä¸€ä¸ªè¿‡ç¨‹ï¼Œå±‚æ¬¡åŠ ä¸€
+		displayLevel++;  //±àÒëµ½ÁËÒ»¸ö¹ı³Ì£¬²ã´Î¼ÓÒ»
 		BTAB[BX].last=0;
 		BTAB[BX].lastPar=0;
 	}
 }
 
-void QUITBLOCK()        //æ¯å½“ä¸€ä¸ªè¿‡ç¨‹ç¼–è¯‘å®Œæ—¶ï¼Œä¿è¯è°ƒç”¨è¯¥å‡½æ•°ä¸€æ¬¡
+void QUITBLOCK()        //Ã¿µ±Ò»¸ö¹ı³Ì±àÒëÍêÊ±£¬±£Ö¤µ÷ÓÃ¸Ãº¯ÊıÒ»´Î
 {
-	displayLevel--;     //å±‚æ¬¡å‡ä¸€
+	displayLevel--;     //²ã´Î¼õÒ»
 }
 
 
-void ENTER(OBJECT kind) //åœ¨ç¼–è¯‘çš„è¿‡ç¨‹ä¸­å°†é‡åˆ°çš„ç¬¦å·å¡«å…¥ç¬¦å·è¡¨ä¸­
-{						//å¦‚æœåœ¨åŒä¸€å±‚æ¬¡å†…æœ‰ä¸¤æ¬¡å®šä¹‰æ€§è´¨çš„å‡ºç°ï¼Œåˆ™æŠ¥é”™
+void ENTER(OBJECT kind) //ÔÚ±àÒëµÄ¹ı³ÌÖĞ½«Óöµ½µÄ·ûºÅÌîÈë·ûºÅ±íÖĞ
+{						//Èç¹ûÔÚÍ¬Ò»²ã´ÎÄÚÓĞÁ½´Î¶¨ÒåĞÔÖÊµÄ³öÏÖ£¬Ôò±¨´í
 	int j,l;
 	if(TX==MAXNUMOFNAMETABLE)
 	{
-		error(25);  //åå­—è¡¨æº¢å‡º
+		error(25);  //Ãû×Ö±íÒç³ö
 		printf("PROGRAM TOO LONG!");
 	}
 	else
 	{
-		strcpy(NAMETAB[0].name,CurSymbol->value.lpValue);    //å½“å‰æ ‡è¯†ç¬¦ï¼ˆæ³¨æ„ï¼šåªèƒ½æ˜¯æ ‡è¯†ç¬¦ï¼‰çš„å†…å®¹å¡«å…¥ç¬¦å·è¡¨çš„ç¬¬ä¸€é¡¹ï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿ
-		j=BTAB[DISPLAY[displayLevel]].last;   //å°†ä¸´æ—¶å˜é‡jè®¾æˆå½“å‰DISPLAYè¡¨é¡¹æ‰€æŒ‡å‘çš„ç¨‹åºä½“è¡¨é¡¹çš„laståŸŸ
+		strcpy(NAMETAB[0].name,CurSymbol->value.lpValue);    //µ±Ç°±êÊ¶·û£¨×¢Òâ£ºÖ»ÄÜÊÇ±êÊ¶·û£©µÄÄÚÈİÌîÈë·ûºÅ±íµÄµÚÒ»Ïî£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿
+		j=BTAB[DISPLAY[displayLevel]].last;   //½«ÁÙÊ±±äÁ¿jÉè³Éµ±Ç°DISPLAY±íÏîËùÖ¸ÏòµÄ³ÌĞòÌå±íÏîµÄlastÓò
 		l=j;
 		while(stricmp(NAMETAB[j].name,CurSymbol->value.lpValue))  
-			j=NAMETAB[j].link;               //é¡ºè—¤æ‘¸ç“œ
+			j=NAMETAB[j].link;               //Ë³ÌÙÃş¹Ï
 		if(j>0)
-			error(31); //å¦‚æœæ‘¸ç€äº†ï¼Œåˆ™æœ¬ç¨‹åºä½“å†…ç¬¦å·é‡å¤å®šä¹‰
+			error(31); //Èç¹ûÃş×ÅÁË£¬Ôò±¾³ÌĞòÌåÄÚ·ûºÅÖØ¸´¶¨Òå
 	    else
-		{             //å¦åˆ™ï¼Œå¡«å…¥ç›¸åº”çš„ä¿¡æ¯
+		{             //·ñÔò£¬ÌîÈëÏàÓ¦µÄĞÅÏ¢
 			TX++;
 			strcpy(NAMETAB[TX].name,CurSymbol->value.lpValue);
 			NAMETAB[TX].link=l;
@@ -215,26 +221,26 @@ void ENTER(OBJECT kind) //åœ¨ç¼–è¯‘çš„è¿‡ç¨‹ä¸­å°†é‡åˆ°çš„ç¬¦å·å¡«å…¥ç¬¦å·è¡¨
 	}
 }
 
-int GETPOSITION(char * id)  //é€šè¿‡æ ‡è¯†ç¬¦çš„å†…å®¹åœ¨åå­—è¡¨é‡Œé¢æŸ¥æ‰¾å…¶ç´¢å¼•
+int GETPOSITION(char * id)  //Í¨¹ı±êÊ¶·ûµÄÄÚÈİÔÚÃû×Ö±íÀïÃæ²éÕÒÆäË÷Òı
 {
 	int i=0,j=displayLevel;
 	strcpy(NAMETAB[0].name,id);
 	//j=displayLevel;
 
-	do              //åœ¨æ‰€æœ‰çš„æ´»åŠ¨è®°å½•ï¼ˆæ³¨æ„ï¼šæ˜¯æ´»åŠ¨çš„ï¼‰é‡Œé¢é¡ºè—¤æ‘¸ç“œ
+	do              //ÔÚËùÓĞµÄ»î¶¯¼ÇÂ¼£¨×¢Òâ£ºÊÇ»î¶¯µÄ£©ÀïÃæË³ÌÙÃş¹Ï
 	{
 		i=BTAB[DISPLAY[j]].last;
 		while (stricmp(NAMETAB[i].name,CurSymbol->value.lpValue))
 			i=NAMETAB[i].link;
-		j--;        //ä¸€ä¸ªè®°å½•é‡Œé¢æ²¡æœ‰æ‘¸åˆ°ï¼Œåˆ™åˆ°ä¸Šä¸€çº§é‡Œé¢å»
+		j--;        //Ò»¸ö¼ÇÂ¼ÀïÃæÃ»ÓĞÃşµ½£¬Ôòµ½ÉÏÒ»¼¶ÀïÃæÈ¥
 	}while( j>=0 && i==0);   
-	if(i==0)      // è¡¨ç¤ºæ²¡æœ‰æ‘¸åˆ°
-		error(33);  //æ²¡æœ‰å®šä¹‰ç¬¦å·
+	if(i==0)      // ±íÊ¾Ã»ÓĞÃşµ½
+		error(33);  //Ã»ÓĞ¶¨Òå·ûºÅ
 	return (int)i;
 }
 
-void CONSTANT(SYMLIST * list,CONSTREC & constRec)  //ä»æºç¨‹åºé‡Œé¢è·å–ä¸€ä¸ªå¸¸é‡ç±»å‹çš„æ•°æ®
-{												   //ä¼ å¼•ç”¨å‚æ•°constRec ç”¨æ¥è®°å½•è·å–çš„ç»“æœ
+void CONSTANT(SYMLIST * list,CONSTREC & constRec)  //´ÓÔ´³ÌĞòÀïÃæ»ñÈ¡Ò»¸ö³£Á¿ÀàĞÍµÄÊı¾İ
+{												   //´«ÒıÓÃ²ÎÊıconstRec ÓÃÀ´¼ÇÂ¼»ñÈ¡µÄ½á¹û
 	int x,sign;
 
 	constRec.type=NOTYP;
@@ -249,21 +255,21 @@ void CONSTANT(SYMLIST * list,CONSTREC & constRec)  //ä»æºç¨‹åºé‡Œé¢è·å–ä¸€
 		}
 		else
 		{
-			sign=1;       //å°†å¸¸é‡çš„ç¬¦å·é»˜è®¤ç½®ä¸ºæ­£
+			sign=1;       //½«³£Á¿µÄ·ûºÅÄ¬ÈÏÖÃÎªÕı
 			if(CurSymbol->type==PLUS || CurSymbol->type==MINUS)
 			{
 				if(CurSymbol->type==MINUS)
-					sign=-1;  //ç½®ä¸ºè´Ÿ
+					sign=-1;  //ÖÃÎª¸º
 				getASymbol();
 			}
 
 			if(CurSymbol->type==IDENT)
 			{
-				x=GETPOSITION(CurSymbol->value.lpValue);  //æŸ¥è¡¨
+				x=GETPOSITION(CurSymbol->value.lpValue);  //²é±í
 				if(x!=0)
 				{
 					if(NAMETAB[x].kind!=KONSTANT)
-						error(17);// åº”è¯¥æ˜¯å¸¸é‡æˆ–è€…å¸¸é‡æ ‡è¯†ç¬¦
+						error(17);// Ó¦¸ÃÊÇ³£Á¿»òÕß³£Á¿±êÊ¶·û
 					else
 					{
 						constRec.type=NAMETAB[x].type;
@@ -282,8 +288,8 @@ void CONSTANT(SYMLIST * list,CONSTREC & constRec)  //ä»æºç¨‹åºé‡Œé¢è·å–ä¸€
 	}
 }
 
-void ARRAYTYP(SYMLIST * list,int & arrayRef,int & arraySize)  //è·å–ä¸€ä¸ªæ•°ç»„ç±»å‹çš„ä¿¡æ¯ï¼Œä¼ å¼•ç”¨å‚æ•°arrayRefå’ŒarraySize
-{																  //ç”¨æ¥è®°å½•ä»æ•°ç»„è·å–çš„å¼•ç”¨ä¿¡æ¯å’Œå¤§å°ä¿¡æ¯	
+void ARRAYTYP(SYMLIST * list,int & arrayRef,int & arraySize)  //»ñÈ¡Ò»¸öÊı×éÀàĞÍµÄĞÅÏ¢£¬´«ÒıÓÃ²ÎÊıarrayRefºÍarraySize
+{																  //ÓÃÀ´¼ÇÂ¼´ÓÊı×é»ñÈ¡µÄÒıÓÃĞÅÏ¢ºÍ´óĞ¡ĞÅÏ¢	
 	TYPES eleType;
 	CONSTREC low,high;
 	int eleRef,eleSize;
@@ -292,39 +298,39 @@ void ARRAYTYP(SYMLIST * list,int & arrayRef,int & arraySize)  //è·å–ä¸€ä¸ªæ•°ç
 	SYMLIST * tempList=new SYMLIST;
 	tempList->AddHead(COLON);	tempList->AddHead(RBRACK);
 	tempList->AddHead(RPAREN);	tempList->AddHead(OFSYM);
-	CONSTANT(tempList,low);         //è·å¾—æ•°ç»„ä¸‹æ ‡çš„ä¸‹é™
+	CONSTANT(tempList,low);         //»ñµÃÊı×éÏÂ±êµÄÏÂÏŞ
 	delete tempList;
 	//////////////////////////////////////////////////////////
 
 	if(low.type!=INTS && low.type!=CHARS)
-		error(20);  //ä¸‹æ ‡å…ƒç´ ç±»å‹é”™è¯¯
+		error(20);  //ÏÂ±êÔªËØÀàĞÍ´íÎó
     if(CurSymbol->type==DPOINT)
 		getASymbol();
 	else
-		error(42);//åº”è¯¥æ˜¯'..'
+		error(42);//Ó¦¸ÃÊÇ'..'
 
 	//////////////////////////////////////////////////////////
     SYMLIST * tempList1=new SYMLIST;
 	tempList1->AddHead(COMMA);	tempList1->AddHead(RBRACK);
 	tempList1->AddHead(RPAREN);	tempList1->AddHead(OFSYM);
-	CONSTANT(tempList1,high);        //è·å¾—æ•°ç»„ä¸‹æ ‡çš„ä¸Šé™
+	CONSTANT(tempList1,high);        //»ñµÃÊı×éÏÂ±êµÄÉÏÏŞ
 	delete tempList1;
 	//////////////////////////////////////////////////////////
 
 	if(low.type!=high.type)
 	{
-		error(21);  //ä¸Šä¸‹ç•Œçš„ç±»å‹ä¸ä¸€è‡´
+		error(21);  //ÉÏÏÂ½çµÄÀàĞÍ²»Ò»ÖÂ
 		high.value=low.value;
 	}
 
-	ENTERARRAY(low.type,low.value,high.value);   //å‘æ•°ç»„ä¿¡æ¯è¡¨ç™»è®°
+	ENTERARRAY(low.type,low.value,high.value);   //ÏòÊı×éĞÅÏ¢±íµÇ¼Ç
 
 	arrayRef=AX;
-	if(CurSymbol->type==COMMA)   //å¦‚æœå½“å‰ç¬¦å·æ˜¯é€—å·ï¼Œè¡¨ç¤ºæ•°ç»„æ˜¯å¤šç»´çš„
+	if(CurSymbol->type==COMMA)   //Èç¹ûµ±Ç°·ûºÅÊÇ¶ººÅ£¬±íÊ¾Êı×éÊÇ¶àÎ¬µÄ
 	{
 		getASymbol();
-		eleType=ARRAYS;    //æ•°ç»„çš„â€œå­ç»´â€çš„ç±»å‹æ˜¯æ•°ç»„
-		ARRAYTYP(list,eleRef,eleSize);   //è·å–è¾ƒä½ç»´çš„æ•°ç»„çš„ä¿¡æ¯
+		eleType=ARRAYS;    //Êı×éµÄ¡°×ÓÎ¬¡±µÄÀàĞÍÊÇÊı×é
+		ARRAYTYP(list,eleRef,eleSize);   //»ñÈ¡½ÏµÍÎ¬µÄÊı×éµÄĞÅÏ¢
 	}
 	else
 	{
@@ -332,7 +338,7 @@ void ARRAYTYP(SYMLIST * list,int & arrayRef,int & arraySize)  //è·å–ä¸€ä¸ªæ•°ç
 			getASymbol();
 		else
 		{
-			error(5);  //åº”è¯¥æ˜¯']'
+			error(5);  //Ó¦¸ÃÊÇ']'
 			if(CurSymbol->type==RPAREN)
 				getASymbol();
 		}
@@ -340,18 +346,18 @@ void ARRAYTYP(SYMLIST * list,int & arrayRef,int & arraySize)  //è·å–ä¸€ä¸ªæ•°ç
 		if(CurSymbol->type==OFSYM)
 			getASymbol();
 		else
-			error(10);  //åº”è¯¥æ˜¯'of'
-		TYP(list,eleType,eleRef,eleSize);   //è·å–æ•°ç»„å…ƒç´ çš„ç±»å‹
+			error(10);  //Ó¦¸ÃÊÇ'of'
+		TYP(list,eleType,eleRef,eleSize);   //»ñÈ¡Êı×éÔªËØµÄÀàĞÍ
 	}
-	arraySize=(high.value-low.value+1)*eleSize;   //è®¡ç®—æœ¬æ•°ç»„ç±»å‹çš„å¤§å°
+	arraySize=(high.value-low.value+1)*eleSize;   //¼ÆËã±¾Êı×éÀàĞÍµÄ´óĞ¡
 	ATAB[arrayRef].size=arraySize;
-	ATAB[arrayRef].eleType=eleType;          //å¡«ä¿¡æ¯
+	ATAB[arrayRef].eleType=eleType;          //ÌîĞÅÏ¢
 	ATAB[arrayRef].elRef=eleRef;
 	ATAB[arrayRef].elSize=eleSize;
 }
 
 
-void TYP(SYMLIST * list,TYPES & type,int & ref,int & size)//è·å–ï¼ˆåˆ°åå­—è¡¨é‡Œé¢æŸ¥æ‰¾ï¼‰å½“å‰çš„æ ‡è¯†ç¬¦çš„ç±»å‹ä¿¡æ¯
+void TYP(SYMLIST * list,TYPES & type,int & ref,int & size)//»ñÈ¡£¨µ½Ãû×Ö±íÀïÃæ²éÕÒ£©µ±Ç°µÄ±êÊ¶·ûµÄÀàĞÍĞÅÏ¢
 {	
 	int x;		
 
@@ -362,12 +368,12 @@ void TYP(SYMLIST * list,TYPES & type,int & ref,int & size)//è·å–ï¼ˆåˆ°åå­—è¡
 	{
 		if(CurSymbol->type==IDENT)
 		{
-			x=GETPOSITION(CurSymbol->value.lpValue);   //æŸ¥è¡¨
+			x=GETPOSITION(CurSymbol->value.lpValue);   //²é±í
 			if(x!=0)
 			{
 				if(NAMETAB[x].kind!=TYPEL)
 				{
-					error(15);  //åº”è¯¥æ˜¯ç±»å‹æ ‡è¯†ç¬¦
+					error(15);  //Ó¦¸ÃÊÇÀàĞÍ±êÊ¶·û
 				}
 				else
 				{
@@ -375,30 +381,30 @@ void TYP(SYMLIST * list,TYPES & type,int & ref,int & size)//è·å–ï¼ˆåˆ°åå­—è¡
 					ref=NAMETAB[x].ref;
 					size=NAMETAB[x].unite.size;
 					if(type==NOTYP)
-						error(36);  //ç±»å‹å®šä¹‰å‡ºé”™
+						error(36);  //ÀàĞÍ¶¨Òå³ö´í
 				}
 				getASymbol();
 			}
 		}
-		else if (CurSymbol->type==ARRAYSYM)  //å¦‚æœæ˜¯æ•°ç»„ç±»å‹
+		else if (CurSymbol->type==ARRAYSYM)  //Èç¹ûÊÇÊı×éÀàĞÍ
 		{
 			getASymbol();
 			if(CurSymbol->type==LBRACK)
 				getASymbol();
 			else
 			{
-				error(4);  //åº”è¯¥æ˜¯'['
+				error(4);  //Ó¦¸ÃÊÇ'['
 				if(CurSymbol->type==LPAREN)
 					getASymbol();
 			}
 			type=ARRAYS;
-			ARRAYTYP(list,ref,size);  //è¿”å›æ•°ç»„ç±»å‹çš„ä¿¡æ¯
+			ARRAYTYP(list,ref,size);  //·µ»ØÊı×éÀàĞÍµÄĞÅÏ¢
 		}
 	}
 }
 
 
-void PARAMENTERLIST(SYMLIST * list)  //ç¼–è¯‘æŸä¸ªè¿‡ç¨‹çš„å‚æ•°åˆ—è¡¨
+void PARAMENTERLIST(SYMLIST * list)  //±àÒëÄ³¸ö¹ı³ÌµÄ²ÎÊıÁĞ±í
 {
 	TYPES type;	
 	int ref,size,x,helper;
@@ -410,22 +416,22 @@ void PARAMENTERLIST(SYMLIST * list)  //ç¼–è¯‘æŸä¸ªè¿‡ç¨‹çš„å‚æ•°åˆ—è¡¨
 	getASymbol();	
 	while(CurSymbol->type==IDENT || CurSymbol->type==VARSYM)
 	{
-		int valuePar=0;  //é»˜è®¤æ˜¯å˜é‡å‚æ•°
+		int valuePar=0;  //Ä¬ÈÏÊÇ±äÁ¿²ÎÊı
 		if(CurSymbol->type!=VARSYM)
-			valuePar=1;  //å¦‚æœå½“å‰ç¬¦å·ä¸æ˜¯varåˆ™è¡¨æ˜æ˜¯å€¼å‚æ•°
+			valuePar=1;  //Èç¹ûµ±Ç°·ûºÅ²»ÊÇvarÔò±íÃ÷ÊÇÖµ²ÎÊı
 		else
 			getASymbol();
 			
 		helper=TX;
 		if(CurSymbol->type==IDENT)
 		{
-			ENTER(VARIABLE);  //ç¼–è¯‘åˆ°ä¸€ä¸ªå˜é‡ï¼Œå°†å…¶ä¿¡æ¯å¡«å…¥ç¬¦å·è¡¨
+			ENTER(VARIABLE);  //±àÒëµ½Ò»¸ö±äÁ¿£¬½«ÆäĞÅÏ¢ÌîÈë·ûºÅ±í
 			getASymbol();
 		}
 		else 
-			error(14);  //åº”è¯¥æ˜¯æ ‡è¯†ç¬¦
+			error(14);  //Ó¦¸ÃÊÇ±êÊ¶·û
 
-		while(CurSymbol->type==COMMA)  //å¦‚æœå½“å‰ç¬¦å·æ˜¯é€—å·ï¼Œåˆ™è¯´æ˜æ˜¯ä¸€ä¸ªå‚æ•°åˆ—è¡¨ï¼Œç»§ç»­è¯»å…¥ä¸‹ä¸€ä¸ªæ ‡è¯†ç¬¦
+		while(CurSymbol->type==COMMA)  //Èç¹ûµ±Ç°·ûºÅÊÇ¶ººÅ£¬ÔòËµÃ÷ÊÇÒ»¸ö²ÎÊıÁĞ±í£¬¼ÌĞø¶ÁÈëÏÂÒ»¸ö±êÊ¶·û
 		{
 			getASymbol();
 			if(CurSymbol->type==IDENT)
@@ -434,14 +440,14 @@ void PARAMENTERLIST(SYMLIST * list)  //ç¼–è¯‘æŸä¸ªè¿‡ç¨‹çš„å‚æ•°åˆ—è¡¨
 				getASymbol();
 			}
 			else
-				error(14);  //åº”è¯¥æ˜¯æ ‡è¯†ç¬¦
+				error(14);  //Ó¦¸ÃÊÇ±êÊ¶·û
 		}
 
-		if(CurSymbol->type==COLON)  //å¦‚æœæ˜¯':'ï¼Œåˆ™åé¢åº”è¯¥æ˜¯ç±»å‹æ ‡è¯†ç¬¦ï¼Œç”¨æ¥å£°æ˜å˜é‡
+		if(CurSymbol->type==COLON)  //Èç¹ûÊÇ':'£¬ÔòºóÃæÓ¦¸ÃÊÇÀàĞÍ±êÊ¶·û£¬ÓÃÀ´ÉùÃ÷±äÁ¿
 		{
 			getASymbol();
 			if(CurSymbol->type!=IDENT)
-				error(14);  //åº”è¯¥æ˜¯æ ‡è¯†ç¬¦
+				error(14);  //Ó¦¸ÃÊÇ±êÊ¶·û
 			else
 			{
 				x=GETPOSITION(CurSymbol->value.lpValue);
@@ -449,7 +455,7 @@ void PARAMENTERLIST(SYMLIST * list)  //ç¼–è¯‘æŸä¸ªè¿‡ç¨‹çš„å‚æ•°åˆ—è¡¨
 				if(x!=0)
 				{
 					if(NAMETAB[x].kind!=TYPEL)
-						error(15);  //åº”è¯¥æ˜¯ç±»å‹æ ‡è¯†ç¬¦
+						error(15);  //Ó¦¸ÃÊÇÀàĞÍ±êÊ¶·û
 					else
 					{
 						type=NAMETAB[x].type;
@@ -463,9 +469,9 @@ void PARAMENTERLIST(SYMLIST * list)  //ç¼–è¯‘æŸä¸ªè¿‡ç¨‹çš„å‚æ•°åˆ—è¡¨
 			}
 		}
 		else
-			error(0);  //åº”è¯¥æ˜¯':'
+			error(0);  //Ó¦¸ÃÊÇ':'
 
-		while(helper<TX)  //å°†ç¼–è¯‘è¯†åˆ«å‡ºæ¥çš„å˜é‡çš„ä¿¡æ¯å¡«å…¥ç¬¦å·è¡¨
+		while(helper<TX)  //½«±àÒëÊ¶±ğ³öÀ´µÄ±äÁ¿µÄĞÅÏ¢ÌîÈë·ûºÅ±í
 		{
 			helper++;
 			NAMETAB[helper].type=type;
@@ -473,7 +479,7 @@ void PARAMENTERLIST(SYMLIST * list)  //ç¼–è¯‘æŸä¸ªè¿‡ç¨‹çš„å‚æ•°åˆ—è¡¨
 			NAMETAB[helper].unite.address=DX;
 			NAMETAB[helper].level=displayLevel;
 			NAMETAB[helper].normal=valuePar;
-			DX+=size;   //DXç”¨æ¥è®°å½•å·²ç»åˆ†é…çš„å±€éƒ¨ç©ºé—´çš„å¤§å°
+			DX+=size;   //DXÓÃÀ´¼ÇÂ¼ÒÑ¾­·ÖÅäµÄ¾Ö²¿¿Õ¼äµÄ´óĞ¡
 		}
 
 		if(CurSymbol->type!=RPAREN)
@@ -482,7 +488,7 @@ void PARAMENTERLIST(SYMLIST * list)  //ç¼–è¯‘æŸä¸ªè¿‡ç¨‹çš„å‚æ•°åˆ—è¡¨
 				getASymbol();
 			else
 			{	
-				error(1);  //åº”è¯¥æ˜¯';'
+				error(1);  //Ó¦¸ÃÊÇ';'
 				if(CurSymbol->type==COMMA)
 					getASymbol();
 			}
@@ -494,22 +500,22 @@ void PARAMENTERLIST(SYMLIST * list)  //ç¼–è¯‘æŸä¸ªè¿‡ç¨‹çš„å‚æ•°åˆ—è¡¨
 		getASymbol();
 	}
 	else
-		error(2);  //åº”è¯¥æ˜¯')'
+		error(2);  //Ó¦¸ÃÊÇ')'
 }
 
-void CONSTDECLARATION(SYMLIST * list)  //å¸¸é‡å£°æ˜
+void CONSTDECLARATION(SYMLIST * list)  //³£Á¿ÉùÃ÷
 {
 	CONSTREC constRec;
 
 	if(CurSymbol->type==IDENT)
 	{
-		ENTER(KONSTANT);   //è¢«å£°æ˜çš„å¸¸é‡æ ‡è¯†ç¬¦
+		ENTER(KONSTANT);   //±»ÉùÃ÷µÄ³£Á¿±êÊ¶·û
 		getASymbol();
 		if(CurSymbol->type==EQL)
 			getASymbol();
 		else
 		{
-			error(6);  //åº”è¯¥æ˜¯'='
+			error(6);  //Ó¦¸ÃÊÇ'='
 			if(CurSymbol->type==BECOMES)
 				getASymbol();
 		}
@@ -517,30 +523,30 @@ void CONSTDECLARATION(SYMLIST * list)  //å¸¸é‡å£°æ˜
 		////////////////////////////////////////////////////////////////
 		SYMLIST * tempList1=new SYMLIST;
 		COPYLIST(tempList1,listAddSym(listAddSym(listAddSym(list,SEMICOLON),COMMA),IDENT));
-		CONSTANT(tempList1,constRec);   //è·å–ä¸‹ä¸€ä¸ªå¸¸é‡çš„ä¿¡æ¯
+		CONSTANT(tempList1,constRec);   //»ñÈ¡ÏÂÒ»¸ö³£Á¿µÄĞÅÏ¢
 		delete tempList1;
 		////////////////////////////////////////////////////////////////
 
-		NAMETAB[TX].type=constRec.type;    //å¡«è¡¨
+		NAMETAB[TX].type=constRec.type;    //Ìî±í
 		NAMETAB[TX].ref=0;
 		NAMETAB[TX].unite.value=constRec.value;
 		if(CurSymbol->type==SEMICOLON)
 			getASymbol();
 		else
-			error(1);//åº”è¯¥æ˜¯';'
+			error(1);//Ó¦¸ÃÊÇ';'
 	}
 	else
-		error(14);//åº”è¯¥æ˜¯æ ‡è¯†ç¬¦
+		error(14);//Ó¦¸ÃÊÇ±êÊ¶·û
 }
 
-void TYPEDECLARATION(SYMLIST * list)  //ç±»å‹å£°æ˜
+void TYPEDECLARATION(SYMLIST * list)  //ÀàĞÍÉùÃ÷
 {
 	TYPES type;
 	int ref,size,helper;
 
 	if(CurSymbol->type==IDENT)
 	{
-		ENTER(TYPEL);  //è¢«å£°æ˜çš„ç±»å‹æ ‡è¯†ç¬¦
+		ENTER(TYPEL);  //±»ÉùÃ÷µÄÀàĞÍ±êÊ¶·û
 		helper=TX;	
 		getASymbol();
 
@@ -548,7 +554,7 @@ void TYPEDECLARATION(SYMLIST * list)  //ç±»å‹å£°æ˜
 			getASymbol();
 		else
 		{
-			error(6);//åº”è¯¥æ˜¯'='
+			error(6);//Ó¦¸ÃÊÇ'='
 			if(CurSymbol->type==SEMICOLON)
 				getASymbol();
 		}
@@ -556,24 +562,24 @@ void TYPEDECLARATION(SYMLIST * list)  //ç±»å‹å£°æ˜
 		//////////////////////////////////////////////////////////////
 		SYMLIST * tempList=new SYMLIST;
 		COPYLIST(tempList,listAddSym(listAddSym(listAddSym(list,SEMICOLON),COMMA),IDENT));
-		TYP(tempList,type,ref,size);    //è·å–ç±»å‹ä¿¡æ¯
+		TYP(tempList,type,ref,size);    //»ñÈ¡ÀàĞÍĞÅÏ¢
 		delete tempList;
 		//////////////////////////////////////////////////////////////
 
-		NAMETAB[TX].type=type;         //å¡«è¡¨
+		NAMETAB[TX].type=type;         //Ìî±í
 		NAMETAB[TX].ref=ref;
 		NAMETAB[TX].unite.size=size;
 
 		if(CurSymbol->type==SEMICOLON)
 			getASymbol();
 		else
-			error(1);//åº”è¯¥æ˜¯';'
+			error(1);//Ó¦¸ÃÊÇ';'
 	}
 	else
-		error(14);//åº”è¯¥æ˜¯æ ‡è¯†ç¬¦
+		error(14);//Ó¦¸ÃÊÇ±êÊ¶·û
 }
 
-void VARDECLARATION(SYMLIST * list)   //å˜é‡å£°æ˜
+void VARDECLARATION(SYMLIST * list)   //±äÁ¿ÉùÃ÷
 {
 	TYPES type;
 	int ref,size,helper1,helper2;
@@ -581,35 +587,35 @@ void VARDECLARATION(SYMLIST * list)   //å˜é‡å£°æ˜
 	if(CurSymbol->type==IDENT)
 	{
 		helper1=TX;
-		ENTER(VARIABLE);   //è¢«å£°æ˜çš„å˜é‡
+		ENTER(VARIABLE);   //±»ÉùÃ÷µÄ±äÁ¿
 		getASymbol();
-		while(CurSymbol->type==COMMA)  //å¦‚æœæ˜¯é€—å·ï¼Œåˆ™é¢ä¸´çš„æ˜¯åŒç±»å‹çš„ä¸€ä¸²å˜é‡åˆ—è¡¨
+		while(CurSymbol->type==COMMA)  //Èç¹ûÊÇ¶ººÅ£¬ÔòÃæÁÙµÄÊÇÍ¬ÀàĞÍµÄÒ»´®±äÁ¿ÁĞ±í
 		{
 			getASymbol();
 			if(CurSymbol->type==IDENT)
 			{
-				ENTER(VARIABLE);  //è¢«å£°æ˜çš„å˜é‡
+				ENTER(VARIABLE);  //±»ÉùÃ÷µÄ±äÁ¿
 				getASymbol();
 			}
 			else
-				error(14);//åº”è¯¥æ˜¯æ ‡è¯†ç¬¦
+				error(14);//Ó¦¸ÃÊÇ±êÊ¶·û
 		}
 
 		if(CurSymbol->type==COLON)
 			getASymbol();
 		else
-			error(0);//åº”è¯¥æ˜¯':'
+			error(0);//Ó¦¸ÃÊÇ':'
 
 		helper2=TX;
 
 	    //////////////////////////////////////////////////////////
 		SYMLIST * tempList=new SYMLIST;
 		COPYLIST(tempList,listAddSym(listAddSym(listAddSym(list,SEMICOLON),COMMA),IDENT));
-		TYP(tempList,type,ref,size);  //è·å–å˜é‡çš„ç±»å‹ä¿¡æ¯
+		TYP(tempList,type,ref,size);  //»ñÈ¡±äÁ¿µÄÀàĞÍĞÅÏ¢
 		delete tempList;
 		//////////////////////////////////////////////////////////
 
-		while(helper1<helper2)  //å°†ä¸€ä¸²å˜é‡çš„ä¿¡æ¯å¡«è¡¨
+		while(helper1<helper2)  //½«Ò»´®±äÁ¿µÄĞÅÏ¢Ìî±í
 		{
 			helper1++;
 			NAMETAB[helper1].type=type;
@@ -620,89 +626,93 @@ void VARDECLARATION(SYMLIST * list)   //å˜é‡å£°æ˜
 			DX+=size;
 		}
 
-		if(CurSymbol->type==SEMICOLON)
+		if (CurSymbol->type == SEMICOLON)
 			getASymbol();
 		else
-			error(1);//åº”è¯¥æ˜¯';'
+			error(1);//Ó¦¸ÃÊÇ';'
 	}
 	else
-		error(14);//åº”è¯¥æ˜¯æ ‡è¯†ç¬¦
+		error(14);//Ó¦¸ÃÊÇ±êÊ¶·û
 }
 
-void PROCDECLARATION(SYMLIST * list)  //è¿‡ç¨‹å£°æ˜
+void PROCDECLARATION(SYMLIST * list)  //¹ı³ÌÉùÃ÷
 {
 	getASymbol();
 	if(CurSymbol->type!=IDENT)
 	{
-		error(14);  //åº”è¯¥æ˜¯æ ‡è¯†ç¬¦
+		error(14);  //Ó¦¸ÃÊÇ±êÊ¶·û
 		strcpy(CurSymbol->value.lpValue,"");
 	}
 
-	ENTER(PROCEDURE);  //è¢«å£°æ˜çš„è¿‡ç¨‹å
+	ENTER(PROCEDURE);  //±»ÉùÃ÷µÄ¹ı³ÌÃû
 	NAMETAB[TX].normal=1;
 	getASymbol();
 
 	///////////////////////////////////////////////////////////
 	SYMLIST * tempList1=new SYMLIST;
 	COPYLIST(tempList1,listAddSym(list,SEMICOLON));
-	BLOCK(tempList1,displayLevel);   //ç¼–è¯‘è¿‡ç¨‹ä½“
+	BLOCK(tempList1,displayLevel);   //±àÒë¹ı³ÌÌå
 	delete tempList1;
 	///////////////////////////////////////////////////////////
 
 	if(CurSymbol->type==SEMICOLON)
 		getASymbol();
 	else
-		error(1);//åº”è¯¥æ˜¯';'
+		error(1);//Ó¦¸ÃÊÇ';'
 }
 
-void error(int errCode)   //è´Ÿè´£æ˜¾ç¤ºå‡ºé”™ä¿¡æ¯çš„å‡½æ•°
+void error(int errCode)   //¸ºÔğÏÔÊ¾³ö´íĞÅÏ¢µÄº¯Êı
 {
 	char errorScript[][100]=
 	{
-		"åº”è¯¥æ˜¯\':\'",//0
-        "åº”è¯¥æ˜¯\';\'",//1
-		"åº”è¯¥æ˜¯\')\'",//2
-		"åº”è¯¥æ˜¯\'(\'",//3
-		"åº”è¯¥æ˜¯\'[\'",//4
-		"åº”è¯¥æ˜¯\']\'",//5
-		"åº”è¯¥æ˜¯\'=\'",//6
-		"åº”è¯¥æ˜¯\':=\'",//7
-		"åº”è¯¥æ˜¯\'.\'",//8
-		"åº”è¯¥æ˜¯\'do\'",//9
-		"åº”è¯¥æ˜¯\'of\'",//10
-		"åº”è¯¥æ˜¯\'then\'",//11
-		"åº”è¯¥æ˜¯\'end\'",//12
-		"åº”è¯¥æ˜¯\'program\'",//13
-		"åº”è¯¥æ˜¯æ ‡è¯†ç¬¦",//14
-		"åº”è¯¥æ˜¯ç±»å‹æ ‡è¯†ç¬¦",//15
-		"åº”è¯¥æ˜¯å˜é‡",//16
-		"åº”è¯¥æ˜¯å¸¸é‡æˆ–å¸¸é‡æ ‡è¯†ç¬¦",//17
-		"åº”è¯¥æ˜¯è¿‡ç¨‹å",//18
-		"æ•°ç»„ä¸Šä¸‹ç•Œå¤§å°å…³ç³»é”™è¯¯",//19
-		"æ•°ç»„å®šä¹‰æ—¶ï¼Œä¸‹æ ‡å…ƒç´ ç±»å‹é”™è¯¯",//20
-		"æ•°ç»„å®šä¹‰æ—¶ï¼Œä¸Šä¸‹ç•Œç±»å‹ä¸ä¸€è‡´",//21
-		"å¼•ç”¨æ—¶ï¼Œæ•°ç»„å…ƒç´ ä¸‹æ ‡å…ƒç´ ç±»å‹å‡ºé”™",//22
-		"ä¸‹æ ‡ä¸ªæ•°ä¸æ­£ç¡®",//23
-		"æ•°ç»„è¡¨æº¢å‡º",//24
-		"åå­—è¡¨æº¢å‡º",//25
-		"ç¨‹åºä½“è¡¨æº¢å‡º",//26
-		"ç³»ç»Ÿä¸ºæœ¬ç¼–è¯‘ç¨‹åºåˆ†é…çš„å †ä¸å¤Ÿç”¨",//27
-		"å®å‚ä¸å½¢å‚ä¸ªæ•°ä¸ç­‰",//28
-		"å®å‚ä¸å½¢å‚ç±»å‹ä¸ä¸€è‡´",//29
-		"å®å‚ä¸ªæ•°ä¸å¤Ÿ",//30
-		"ç¨‹åºä½“å†…ç¬¦å·é‡å®šä¹‰",//31
-		"ifæˆ–whileåé¢è¡¨è¾¾å¼å¿…é¡»ä¸ºå¸ƒå°”ç±»å‹",//32
-		"æ ‡è¯†ç¬¦æ²¡æœ‰å®šä¹‰",//33
-		"è¿‡ç¨‹åæˆ–ç±»å‹åä¸èƒ½å‡ºç°åœ¨è¡¨è¾¾å¼ä¸­",//34
-		"æ“ä½œæ•°ç±»å‹é”™è¯¯",//35
-		"ç±»å‹å®šä¹‰å‡ºé”™",//36
-		"ç±»å‹ä¸ä¸€è‡´",//37
-		"ä¸è®¤è¯†çš„å­—ç¬¦å‡ºç°åœ¨æºç¨‹åº",//38
-		"ä¸èƒ½æ‰“å¼€.lstæ–‡ä»¶",//39
-		"ä¸èƒ½æ‰“å¼€.pldæ–‡ä»¶",//40
-		"ä¸èƒ½æ‰“å¼€.labæ–‡ä»¶",//41
-		"åº”è¯¥æ˜¯\'..\'",//42
-		"åˆ†ææ—¶ç¼ºå°‘æ ‡è¯†ç¬¦",//43
+		"Ó¦¸ÃÊÇ\':\'",//0
+        "Ó¦¸ÃÊÇ\';\'",//1
+		"Ó¦¸ÃÊÇ\')\'",//2
+		"Ó¦¸ÃÊÇ\'(\'",//3
+		"Ó¦¸ÃÊÇ\'[\'",//4
+		"Ó¦¸ÃÊÇ\']\'",//5
+		"Ó¦¸ÃÊÇ\'=\'",//6
+		"Ó¦¸ÃÊÇ\':=\'",//7
+		"Ó¦¸ÃÊÇ\'.\'",//8
+		"Ó¦¸ÃÊÇ\'do\'",//9
+		"Ó¦¸ÃÊÇ\'of\'",//10
+		"Ó¦¸ÃÊÇ\'then\'",//11
+		"Ó¦¸ÃÊÇ\'end\'",//12
+		"Ó¦¸ÃÊÇ\'program\'",//13
+		"Ó¦¸ÃÊÇ±êÊ¶·û",//14
+		"Ó¦¸ÃÊÇÀàĞÍ±êÊ¶·û",//15
+		"Ó¦¸ÃÊÇ±äÁ¿",//16
+		"Ó¦¸ÃÊÇ³£Á¿»ò³£Á¿±êÊ¶·û",//17
+		"Ó¦¸ÃÊÇ¹ı³ÌÃû",//18
+		"Êı×éÉÏÏÂ½ç´óĞ¡¹ØÏµ´íÎó",//19
+		"Êı×é¶¨ÒåÊ±£¬ÏÂ±êÔªËØÀàĞÍ´íÎó",//20
+		"Êı×é¶¨ÒåÊ±£¬ÉÏÏÂ½çÀàĞÍ²»Ò»ÖÂ",//21
+		"ÒıÓÃÊ±£¬Êı×éÔªËØÏÂ±êÔªËØÀàĞÍ³ö´í",//22
+		"ÏÂ±ê¸öÊı²»ÕıÈ·",//23
+		"Êı×é±íÒç³ö",//24
+		"Ãû×Ö±íÒç³ö",//25
+		"³ÌĞòÌå±íÒç³ö",//26
+		"ÏµÍ³Îª±¾±àÒë³ÌĞò·ÖÅäµÄ¶Ñ²»¹»ÓÃ",//27
+		"Êµ²ÎÓëĞÎ²Î¸öÊı²»µÈ",//28
+		"Êµ²ÎÓëĞÎ²ÎÀàĞÍ²»Ò»ÖÂ",//29
+		"Êµ²Î¸öÊı²»¹»",//30
+		"³ÌĞòÌåÄÚ·ûºÅÖØ¶¨Òå",//31
+		"if»òwhile forºóÃæ±í´ïÊ½±ØĞëÎª²¼¶ûÀàĞÍ",//32
+		"±êÊ¶·ûÃ»ÓĞ¶¨Òå",//33
+		"¹ı³ÌÃû»òÀàĞÍÃû²»ÄÜ³öÏÖÔÚ±í´ïÊ½ÖĞ",//34
+		"²Ù×÷ÊıÀàĞÍ´íÎó",//35
+		"ÀàĞÍ¶¨Òå³ö´í",//36
+		"ÀàĞÍ²»Ò»ÖÂ",//37
+		"²»ÈÏÊ¶µÄ×Ö·û³öÏÖÔÚÔ´³ÌĞò",//38
+		"²»ÄÜ´ò¿ª.lstÎÄ¼ş",//39
+		"²»ÄÜ´ò¿ª.pldÎÄ¼ş",//40
+		"²»ÄÜ´ò¿ª.labÎÄ¼ş",//41
+		"Ó¦¸ÃÊÇ\'..\'",//42
+		"·ÖÎöÊ±È±ÉÙ±êÊ¶·û",//43
+		"forºóÃæ±ØĞëÊ±¸³ÖµÓï¾ä",//44
+		"Ó¦¸ÃÊÇ\'to\'",//45
+		"Ó¦¸ÃÊÇ\'until\'",//46
+
 };
 
 	if(CurSymbol && CurSymbol->lineNumber>0)
@@ -713,7 +723,7 @@ void error(int errCode)   //è´Ÿè´£æ˜¾ç¤ºå‡ºé”™ä¿¡æ¯çš„å‡½æ•°
 }
 
 
-void FACTOR(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸‹ä¸€ä¸ªâ€œå› å­â€çš„ä¿¡æ¯ï¼Œä¼ å¼•ç”¨å‚æ•°typeItemç”¨æ¥ä¿å­˜ä¿¡æ¯
+void FACTOR(SYMLIST * list,TYPEITEM & typeItem)  //»ñÈ¡ÏÂÒ»¸ö¡°Òò×Ó¡±µÄĞÅÏ¢£¬´«ÒıÓÃ²ÎÊıtypeItemÓÃÀ´±£´æĞÅÏ¢
 {
 	int i;
 
@@ -730,7 +740,7 @@ void FACTOR(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸‹ä¸€ä¸ªâ€œå› å­â€çš
 		switch(CurSymbol->type)
 		{
 		case IDENT:
-			i=GETPOSITION(CurSymbol->value.lpValue);  //å¦‚æœæ˜¯æ ‡è¯†ç¬¦ï¼Œåˆ™æŸ¥è¡¨
+			i=GETPOSITION(CurSymbol->value.lpValue);  //Èç¹ûÊÇ±êÊ¶·û£¬Ôò²é±í
 			getASymbol();
 			if(i!=0)
 			{
@@ -768,7 +778,7 @@ void FACTOR(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸‹ä¸€ä¸ªâ€œå› å­â€çš
 					break;
 				case PROCEDURE:
 				case TYPEL:
-					error(34);  //è¿‡ç¨‹åæˆ–ç±»å‹åä¸èƒ½å‡ºç°åœ¨è¡¨è¾¾å§‹ä¸­
+					error(34);  //¹ı³ÌÃû»òÀàĞÍÃû²»ÄÜ³öÏÖÔÚ±í´ïÊ¼ÖĞ
 					break;
 				}
 			}
@@ -784,21 +794,21 @@ void FACTOR(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸‹ä¸€ä¸ªâ€œå› å­â€çš
 			GEN(LIT,0,CurSymbol->value.iValue);
 			getASymbol();
 			break;
-		case LPAREN:  //å¦‚æœæ˜¯å·¦æ‹¬å·
+		case LPAREN:  //Èç¹ûÊÇ×óÀ¨ºÅ
 			getASymbol();
-			EXPRESSION(tempList2,typeItem);  //è·å–ä¸€ä¸ªâ€œè¡¨è¾¾å¼â€çš„ä¿¡æ¯
+			EXPRESSION(tempList2,typeItem);  //»ñÈ¡Ò»¸ö¡°±í´ïÊ½¡±µÄĞÅÏ¢
 			if(CurSymbol->type==RPAREN)
 				getASymbol();
 			else 
-				error(2); //åº”è¯¥æ˜¯')'
+				error(2); //Ó¦¸ÃÊÇ')'
 			break;
-		case NOTSYM:   //å¦‚æœæ˜¯â€œéâ€
+		case NOTSYM:   //Èç¹ûÊÇ¡°·Ç¡±
 			getASymbol();
-			FACTOR(list,typeItem);   //è·å–ä¸€ä¸ªâ€œå› å­â€çš„ä¿¡æ¯
+			FACTOR(list,typeItem);   //»ñÈ¡Ò»¸ö¡°Òò×Ó¡±µÄĞÅÏ¢
 			if(typeItem.typ==BOOLS)
 				GEN(NOTS,0,0);
 			else
-				error(35);  //æ“ä½œæ•°ç±»å‹é”™è¯¯
+				error(35);  //²Ù×÷ÊıÀàĞÍ´íÎó
 			break;
 		}
 
@@ -807,7 +817,7 @@ void FACTOR(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸‹ä¸€ä¸ªâ€œå› å­â€çš
 }
 
 
-void TERM(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸€ä¸ªâ€œé¡¹â€çš„ä¿¡æ¯
+void TERM(SYMLIST * list,TYPEITEM & typeItem)  //»ñÈ¡Ò»¸ö¡°Ïî¡±µÄĞÅÏ¢
 {
 	SYMBOL mulop;
 	TYPEITEM helpTypeItem;
@@ -817,17 +827,17 @@ void TERM(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸€ä¸ªâ€œé¡¹â€çš„ä¿¡æ¯
 	SYMLIST * tempList1=new SYMLIST;
 	tempList1->AddHead(TIMES);	tempList1->AddHead(DIVSYM);	tempList1->AddHead(MODSYM);	tempList1->AddHead(ANDSYM);
 	COPYLIST(tempList,listsAdd(tempList1,list));
-	FACTOR(tempList,typeItem);    //è·å–ä¸€ä¸ªâ€œå› å­â€çš„ä¿¡æ¯
+	FACTOR(tempList,typeItem);    //»ñÈ¡Ò»¸ö¡°Òò×Ó¡±µÄĞÅÏ¢
 	///////////////////////////////////////////////////////////
 
 	while(SYMINLIST(CurSymbol->type,tempList1))
 	{
 		mulop=CurSymbol->type;  
 		getASymbol();
-		FACTOR(tempList,helpTypeItem);   //è·å–ä¸€ä¸ªâ€œå› å­â€çš„ä¿¡æ¯
+		FACTOR(tempList,helpTypeItem);   //»ñÈ¡Ò»¸ö¡°Òò×Ó¡±µÄĞÅÏ¢
 		if(typeItem.typ!=helpTypeItem.typ)
 		{
-			error(37);//ç±»å‹ä¸ä¸€è‡´
+			error(37);//ÀàĞÍ²»Ò»ÖÂ
 			typeItem.typ=NOTYP;
 			typeItem.ref=0;
 		}
@@ -839,25 +849,25 @@ void TERM(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸€ä¸ªâ€œé¡¹â€çš„ä¿¡æ¯
 				if(typeItem.typ==INTS)
 					GEN(MULT,0,0);
 				else
-					error(35);//æ“ä½œæ•°ç±»å‹é”™è¯¯
+					error(35);//²Ù×÷ÊıÀàĞÍ´íÎó
 				break;
 			case DIVSYM:
 				if(typeItem.typ==INTS)
 					GEN(IDIV,0,0);
 				else
-					error(35);//æ“ä½œæ•°ç±»å‹é”™è¯¯
+					error(35);//²Ù×÷ÊıÀàĞÍ´íÎó
 				break;
 			case MODSYM:
 				if(typeItem.typ==INTS)
 					GEN(IMOD,0,0);
 				else
-					error(35);//æ“ä½œæ•°ç±»å‹é”™è¯¯
+					error(35);//²Ù×÷ÊıÀàĞÍ´íÎó
 				break;
 			case ANDSYM:
 				if(typeItem.typ==INTS)
 					GEN(ANDS,0,0);
 				else
-					error(35);//æ“ä½œæ•°ç±»å‹é”™è¯¯
+					error(35);//²Ù×÷ÊıÀàĞÍ´íÎó
 				break;
 			}
 		}
@@ -865,7 +875,7 @@ void TERM(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸€ä¸ªâ€œé¡¹â€çš„ä¿¡æ¯
 	delete tempList;delete tempList1;
 }
 
-void SIMPLEEXPRESSION(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸€ä¸ªâ€œç®€å•è¡¨è¾¾å¼â€çš„ä¿¡æ¯
+void SIMPLEEXPRESSION(SYMLIST * list,TYPEITEM & typeItem)  //»ñÈ¡Ò»¸ö¡°¼òµ¥±í´ïÊ½¡±µÄĞÅÏ¢
 {
 	SYMBOL addop;
 	TYPEITEM helpTypeItem;
@@ -881,21 +891,21 @@ void SIMPLEEXPRESSION(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸€ä¸ªâ€œç®€å
 	{
 		addop=CurSymbol->type;
 		getASymbol();
-		TERM(tempList1,typeItem);  //è·å–ä¸€ä¸ªâ€œé¡¹â€çš„ä¿¡æ¯
+		TERM(tempList1,typeItem);  //»ñÈ¡Ò»¸ö¡°Ïî¡±µÄĞÅÏ¢
 		if(addop==MINUS)
 			GEN(MUS,0,0);
 	}
 	else
-		TERM(tempList1,typeItem);   //è·å–ä¸€ä¸ªâ€œé¡¹â€çš„ä¿¡æ¯
+		TERM(tempList1,typeItem);   //»ñÈ¡Ò»¸ö¡°Ïî¡±µÄĞÅÏ¢
 
 	while(SYMINLIST(CurSymbol->type,tempList))
 	{
 		addop=CurSymbol->type;
 		getASymbol();
-		TERM(tempList1,helpTypeItem);   //è·å–ä¸€ä¸ªâ€œé¡¹â€çš„ä¿¡æ¯
-		if(typeItem.typ!=helpTypeItem.typ)  //å¦‚æœä¸¤ä¸ªé¡¹çš„ä¿¡æ¯å‘ç”Ÿå†²çª
+		TERM(tempList1,helpTypeItem);   //»ñÈ¡Ò»¸ö¡°Ïî¡±µÄĞÅÏ¢
+		if(typeItem.typ!=helpTypeItem.typ)  //Èç¹ûÁ½¸öÏîµÄĞÅÏ¢·¢Éú³åÍ»
 		{
-			error(37);//ç±»å‹ä¸ä¸€è‡´
+			error(37);//ÀàĞÍ²»Ò»ÖÂ
 			typeItem.typ=NOTYP;
 			typeItem.ref=0;
 		}
@@ -907,19 +917,19 @@ void SIMPLEEXPRESSION(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸€ä¸ªâ€œç®€å
 				if(typeItem.typ==INTS)
 					GEN(ADD,0,0);
 				else
-					error(35);//æ“ä½œæ•°ç±»å‹é”™è¯¯
+					error(35);//²Ù×÷ÊıÀàĞÍ´íÎó
 				break;
 			case MINUS:
 				if(typeItem.typ==INTS)
 					GEN(SUB,0,0);
 				else
-					error(35);//æ“ä½œæ•°ç±»å‹é”™è¯¯
+					error(35);//²Ù×÷ÊıÀàĞÍ´íÎó
 				break;
 			case ORSYM:
 				if(typeItem.typ==BOOLS)
 					GEN(ORS,0,0);
 				else
-					error(35);//æ“ä½œæ•°ç±»å‹é”™è¯¯
+					error(35);//²Ù×÷ÊıÀàĞÍ´íÎó
 				break;
 			}
 		}
@@ -927,7 +937,7 @@ void SIMPLEEXPRESSION(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸€ä¸ªâ€œç®€å
 	delete tempList;delete tempList1;
 }
 
-void EXPRESSION(SYMLIST * list,TYPEITEM & typeItem)   //è·å–ä¸€ä¸ªâ€œè¡¨è¾¾å¼â€çš„ä¿¡æ¯
+void EXPRESSION(SYMLIST * list,TYPEITEM & typeItem)   //»ñÈ¡Ò»¸ö¡°±í´ïÊ½¡±µÄĞÅÏ¢
 {
 	SYMBOL relationop;
 	TYPEITEM helpTypeItem;
@@ -938,16 +948,16 @@ void EXPRESSION(SYMLIST * list,TYPEITEM & typeItem)   //è·å–ä¸€ä¸ªâ€œè¡¨è¾¾å¼
 	tempList->AddHead(EQL);	tempList->AddHead(NEQ);	tempList->AddHead(LSS);
 	tempList->AddHead(GTR);	tempList->AddHead(LEQ);	tempList->AddHead(GEQ);
 	COPYLIST(tempList1,listsAdd(tempList,list));
-	SIMPLEEXPRESSION(tempList1,typeItem);  //è·å–ä¸€ä¸ªâ€œç®€å•è¡¨è¾¾å¼â€çš„ä¿¡æ¯
+	SIMPLEEXPRESSION(tempList1,typeItem);  //»ñÈ¡Ò»¸ö¡°¼òµ¥±í´ïÊ½¡±µÄĞÅÏ¢
 	/////////////////////////////////////////////////////////////////
 
 	while(SYMINLIST(CurSymbol->type,tempList))
 	{
 		relationop=CurSymbol->type;
 		getASymbol();
-		SIMPLEEXPRESSION(list,helpTypeItem);   ///è·å–ä¸€ä¸ªâ€œç®€å•è¡¨è¾¾å¼â€çš„ä¿¡æ¯
+		SIMPLEEXPRESSION(list,helpTypeItem);   ///»ñÈ¡Ò»¸ö¡°¼òµ¥±í´ïÊ½¡±µÄĞÅÏ¢
 		if(typeItem.typ!=helpTypeItem.typ)
-			error(37);//ç±»å‹ä¸ä¸€è‡´
+			error(37);//ÀàĞÍ²»Ò»ÖÂ
 		else
 		{
 			switch(relationop)
@@ -967,7 +977,7 @@ void EXPRESSION(SYMLIST * list,TYPEITEM & typeItem)   //è·å–ä¸€ä¸ªâ€œè¡¨è¾¾å¼
 
 
 
-void ARRAYELEMENT(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸€ä¸ªæ•°ç»„å…ƒç´ çš„ä¿¡æ¯
+void ARRAYELEMENT(SYMLIST * list,TYPEITEM & typeItem)  //»ñÈ¡Ò»¸öÊı×éÔªËØµÄĞÅÏ¢
 {
 	int p;
 	TYPEITEM helpTypeItem;
@@ -980,14 +990,14 @@ void ARRAYELEMENT(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸€ä¸ªæ•°ç»„å…ƒç´
 		do
 		{
 			getASymbol();
-			EXPRESSION(tempList,helpTypeItem);   //å¼•ç”¨æ•°ç»„å…ƒç´ æ—¶æ‰€ä½¿ç”¨çš„æ•°ç»„ä¸‹æ ‡çš„ä¿¡æ¯
+			EXPRESSION(tempList,helpTypeItem);   //ÒıÓÃÊı×éÔªËØÊ±ËùÊ¹ÓÃµÄÊı×éÏÂ±êµÄĞÅÏ¢
 			if(typeItem.typ!=ARRAYS)
-				error(23);  //ä¸‹æ ‡ä¸ªæ•°ä¸æ­£ç¡®
+				error(23);  //ÏÂ±ê¸öÊı²»ÕıÈ·
 			else
 			{
 				if(helpTypeItem.typ!=ATAB[p].intType)
-					error(22);  //æ•°ç»„å…ƒç´ å¼•ç”¨æ—¶ï¼Œä¸‹æ ‡å…ƒç´ ç±»å‹å‡ºé”™
-				GEN(LIT,0,ATAB[p].low);    //ä¸‹é¢æ˜¯äº§ç”Ÿçš„è®¡ç®—æ•°ç»„å…ƒç´ åœ°å€çš„ä»£ç 
+					error(22);  //Êı×éÔªËØÒıÓÃÊ±£¬ÏÂ±êÔªËØÀàĞÍ³ö´í
+				GEN(LIT,0,ATAB[p].low);    //ÏÂÃæÊÇ²úÉúµÄ¼ÆËãÊı×éÔªËØµØÖ·µÄ´úÂë
 				GEN(SUB,0,0);
 				GEN(LIT1,0,ATAB[p].elSize);
 				GEN(MULT,0,0);
@@ -997,19 +1007,19 @@ void ARRAYELEMENT(SYMLIST * list,TYPEITEM & typeItem)  //è·å–ä¸€ä¸ªæ•°ç»„å…ƒç´
 				p=ATAB[p].elRef;
 			}
 		}
-		while(CurSymbol->type==COMMA);  //å¤šç»´æ•°ç»„
+		while(CurSymbol->type==COMMA);  //¶àÎ¬Êı×é
 
 		if(CurSymbol->type==RBRACK)
 			getASymbol();
 		else
-			error(5);//åº”è¯¥æ˜¯']'
+			error(5);//Ó¦¸ÃÊÇ']'
 	}
 	else
-		error(4);//åº”è¯¥æ˜¯'['	
+		error(4);//Ó¦¸ÃÊÇ'['	
 }
 
 
-void INITIAL()  //ç¼–è¯‘ç¨‹åºåˆå§‹åŒ–æ‰€ä½œçš„ä¸€äº›å·¥ä½œ
+void INITIAL()  //±àÒë³ÌĞò³õÊ¼»¯Ëù×÷µÄÒ»Ğ©¹¤×÷
 {
 	nError=0;
 	displayLevel=0;
@@ -1021,6 +1031,8 @@ void INITIAL()  //ç¼–è¯‘ç¨‹åºåˆå§‹åŒ–æ‰€ä½œçš„ä¸€äº›å·¥ä½œ
 	TX=-1;
 	JX=0;
 
+	
+
 	// FIVE SYMLISTS' INITIALIZATION
 
 	DECLBEGSYS.AddHead(CONSTSYM);	DECLBEGSYS.AddHead(VARSYM);
@@ -1028,6 +1040,8 @@ void INITIAL()  //ç¼–è¯‘ç¨‹åºåˆå§‹åŒ–æ‰€ä½œçš„ä¸€äº›å·¥ä½œ
 
 	STATBEGSYS.AddHead(BEGINSYM);	STATBEGSYS.AddHead(CALLSYM);
 	STATBEGSYS.AddHead(IFSYM);	STATBEGSYS.AddHead(WHILESYM);
+
+	STATBEGSYS.AddHead(REPEATSYM); STATBEGSYS.AddHead(FORSYM); STATBEGSYS.AddHead(CASESYM);
 
 	FACBEGSYS.AddHead(IDENT);	FACBEGSYS.AddHead(INTCON);	FACBEGSYS.AddHead(LPAREN);
 	FACBEGSYS.AddHead(NOTSYM);	FACBEGSYS.AddHead(CHARCON);
@@ -1039,7 +1053,7 @@ void INITIAL()  //ç¼–è¯‘ç¨‹åºåˆå§‹åŒ–æ‰€ä½œçš„ä¸€äº›å·¥ä½œ
 }
 
 
-void ENTERID(char * name,OBJECT kind,TYPES type,int value)  //å‘ç¬¦å·è¡¨ä¸­å¡«å…¥ä¿¡æ¯è¦ç”¨çš„å‡½æ•°
+void ENTERID(const char * name,OBJECT kind,TYPES type,int value)  //Ïò·ûºÅ±íÖĞÌîÈëĞÅÏ¢ÒªÓÃµÄº¯Êı
 {
 	TX++;
 	strcpy(NAMETAB[TX].name,name);
@@ -1062,9 +1076,10 @@ void ENTERID(char * name,OBJECT kind,TYPES type,int value)  //å‘ç¬¦å·è¡¨ä¸­å¡«
 	return;
 }
 
-void ENTERPREID()  //é¢„å…ˆå¡«å…¥ç¬¦å·è¡¨çš„ä¿¡æ¯ï¼Œå°†è¿™äº›ä¿¡æ¯ä½œä¸ºâ€œè¿‡ç¨‹é›¶â€é‡Œé¢çš„æ•°æ®
+void ENTERPREID()  //Ô¤ÏÈÌîÈë·ûºÅ±íµÄĞÅÏ¢£¬½«ÕâĞ©ĞÅÏ¢×÷Îª¡°¹ı³ÌÁã¡±ÀïÃæµÄÊı¾İ
 {
 	ENTERID("",VARIABLE,NOTYP,0);
+	//ENTERID("real",TYPEL,REALS,1);
 	ENTERID("char",TYPEL,CHARS,1);
 	ENTERID("integer",TYPEL,INTS,1);
 	ENTERID("boolean",TYPEL,BOOLS,1);
@@ -1079,50 +1094,70 @@ void ENTERPREID()  //é¢„å…ˆå¡«å…¥ç¬¦å·è¡¨çš„ä¿¡æ¯ï¼Œå°†è¿™äº›ä¿¡æ¯ä½œä¸ºâ€œè¿
 	BTAB[0].vSize=0;
 }
 
-void ASSIGNMENT(SYMLIST * list)  //åˆ†æèµ‹å€¼è¯­å¥
+void ASSIGNMENT(SYMLIST * list)  //·ÖÎö¸³ÖµÓï¾ä
 {
 	TYPEITEM typeItem1,typeItem2;
 	int i;
 
 	i=GETPOSITION(CurSymbol->value.lpValue);
 	if(i==0)
-		error(33);  //æ ‡è¯†ç¬¦æ²¡æœ‰å®šä¹‰
+		error(33);   //±êÊ¶·ûÃ»ÓĞ¶¨Òå
 	else
 	{
-		if (NAMETAB[i].kind!=VARIABLE)  //':='å·¦è¾¹åº”è¯¥æ˜¯å˜é‡
+		if (NAMETAB[i].kind!=VARIABLE)  //':='×ó±ßÓ¦¸ÃÊÇ±äÁ¿
 		{
-			error(16);  //åº”è¯¥æ˜¯å˜é‡
+			error(16);  //Ó¦¸ÃÊÇ±äÁ¿
             i=0;
 		}
         getASymbol();
         typeItem1.typ=NAMETAB[i].type;
         typeItem1.ref=NAMETAB[i].ref;
+		typeItem2.typ = NAMETAB[i].type;
+		typeItem2.ref = NAMETAB[i].ref;
         if(NAMETAB[i].normal)
-			GEN(LODA,NAMETAB[i].level,NAMETAB[i].unite.address);
+			GEN(LODA,NAMETAB[i].level,NAMETAB[i].unite.address); //±äÁ¿µØÖ·ÈëÕ»
 		else
-			GEN(LOD,NAMETAB[i].level,NAMETAB[i].unite.address);
+			GEN(LOD,NAMETAB[i].level,NAMETAB[i].unite.address);  //±äÁ¿ÖµÈëÕ»
 
-		if(CurSymbol->type==LBRACK)  //å¦‚æœå½“å‰æ ‡è¯†ç¬¦æ˜¯å·¦å¤§æ‹¬å·ï¼Œé‚£ä¹ˆæ­£åœ¨ä¸ºä¸€ä¸ªæ•°ç»„çš„å…ƒç´ èµ‹å€¼
+		if(CurSymbol->type==LBRACK)  //Èç¹ûµ±Ç°±êÊ¶·ûÊÇ×ó´óÀ¨ºÅ£¬ÄÇÃ´ÕıÔÚÎªÒ»¸öÊı×éµÄÔªËØ¸³Öµ
 		{
 			//////////////////////////////////////////////////////////
 			SYMLIST * tempList=new SYMLIST;
 			COPYLIST(tempList,listAddSym(list,BECOMES));
-            ARRAYELEMENT(tempList,typeItem1);  //è·å¾—æ­¤æ•°ç»„å…ƒç´ çš„ä¿¡æ¯
+            ARRAYELEMENT(tempList,typeItem1);  //»ñµÃ´ËÊı×éÔªËØµÄĞÅÏ¢
 			delete tempList;
             //////////////////////////////////////////////////////////
 		}
 			
-		if(CurSymbol->type==BECOMES)
+		if (CurSymbol->type == BECOMES)
+		{
 			getASymbol();
+			EXPRESSION(list, typeItem2);//':='ÓÒ±ßÊÇ±í´ïÊ½
+		}	
+//Ìí¼Ó		
+		else if (CurSymbol->type == PLUSBECOMES)
+		{
+			GEN(LOD, NAMETAB[i].level, NAMETAB[i].unite.address);
+			getASymbol();
+			EXPRESSION(list, typeItem2);
+			GEN(ADD, 0, 0);
+		}
+		else if (CurSymbol->type == MINUSBECOMES)
+		{
+			GEN(LOD, NAMETAB[i].level, NAMETAB[i].unite.address);
+			getASymbol();
+			EXPRESSION(list, typeItem2);
+			GEN(SUB, 0, 0);
+		}
 		else
 		{
-			error(7);  //åº”è¯¥æ˜¯':='
+			error(7);  //Ó¦¸ÃÊÇ':='
             if(CurSymbol->type==EQL)
 				getASymbol();
 		}
-		EXPRESSION(list,typeItem2);  //':='å³è¾¹æ˜¯è¡¨è¾¾å¼
-		if(typeItem1.typ!=typeItem2.typ)
-			error(37);//ç±»å‹ä¸ä¸€è‡´
+		// EXPRESSION(list,typeItem2);  //':='ÓÒ±ßÊÇ±í´ïÊ½
+		if (typeItem1.typ != typeItem2.typ)
+			error(37);//ÀàĞÍ²»Ò»ÖÂ
 		else
 		{
 			if(typeItem1.typ==ARRAYS)
@@ -1130,7 +1165,7 @@ void ASSIGNMENT(SYMLIST * list)  //åˆ†æèµ‹å€¼è¯­å¥
 				if(typeItem1.ref==typeItem2.ref)
 					GEN(CPYB,0,ATAB[typeItem1.ref].size);
 				else
-					error(35);//æ“ä½œæ•°ç±»å‹å‡ºé”™
+					error(35);//²Ù×÷ÊıÀàĞÍ³ö´í
 			}
 			else
 				GEN(STO,0,0);
@@ -1139,7 +1174,7 @@ void ASSIGNMENT(SYMLIST * list)  //åˆ†æèµ‹å€¼è¯­å¥
 }
 
 
-void IFSTATEMENT(SYMLIST * list)  //åˆ†æifè¯­å¥
+void IFSTATEMENT(SYMLIST * list)  //·ÖÎöifÓï¾ä
 {
 	TYPEITEM typeItem;
 	int fillBackFalse,fillBackTrue;
@@ -1149,31 +1184,31 @@ void IFSTATEMENT(SYMLIST * list)  //åˆ†æifè¯­å¥
 	/////////////////////////////////////////////////////////////////
 	SYMLIST * tempList=new SYMLIST;
 	COPYLIST(tempList,listAddSym(listAddSym(list,DOSYM),THENSYM));
-	EXPRESSION(tempList,typeItem);  //è·å–å¸ƒå°”è¡¨è¾¾å¼çš„ä¿¡æ¯
+	EXPRESSION(tempList,typeItem);  //»ñÈ¡²¼¶û±í´ïÊ½µÄĞÅÏ¢
 	delete tempList;
 	/////////////////////////////////////////////////////////////////
 
 	if(typeItem.typ!=BOOLS)
-		error(32);  //ifæˆ–whileåé¢çš„è¡¨è¾¾å¼ç±»å‹å¿…é¡»ä¸ºå¸ƒå°”ç±»å‹
+		error(32);  //if»òwhileºóÃæµÄ±í´ïÊ½ÀàĞÍ±ØĞëÎª²¼¶ûÀàĞÍ
 	if(CurSymbol->type==THENSYM)
 		getASymbol();
 	else 
-		error(11);  //åº”è¯¥æ˜¯'then'
+		error(11);  //Ó¦¸ÃÊÇ'then'
 
-	fillBackFalse=CX;  //å›å¡«
+	fillBackFalse=CX;  //»ØÌî
 	GEN(JPC,0,0);
 
 	/////////////////////////////////////////////////////////////////
 	SYMLIST * tempList1=new SYMLIST;
 	COPYLIST(tempList1,listAddSym(list,ELSESYM));
-	STATEMENT(tempList1);  //è¯­å¥åˆ†æ
+	STATEMENT(tempList1);  //Óï¾ä·ÖÎö
 	delete tempList1;
 	/////////////////////////////////////////////////////////////////
 
 	if(CurSymbol->type==ELSESYM)
 	{
 		getASymbol();
-		fillBackTrue=CX;  //å›å¡«
+		fillBackTrue=CX;  //»ØÌî
 		GEN(JMP,0,0);
 		CODE[fillBackFalse].address=CX;
 		JUMADRTAB[JX]=CX;
@@ -1192,7 +1227,7 @@ void IFSTATEMENT(SYMLIST * list)  //åˆ†æifè¯­å¥
 }
 
 
-void WHILESTATEMENT(SYMLIST * list)  //while è¯­å¥çš„åˆ†æ
+void WHILESTATEMENT(SYMLIST * list)  //while Óï¾äµÄ·ÖÎö
 {
 	TYPEITEM typeItem;
 	int jumpback,fillBackFalse;
@@ -1200,7 +1235,7 @@ void WHILESTATEMENT(SYMLIST * list)  //while è¯­å¥çš„åˆ†æ
 	getASymbol();
 	JUMADRTAB[JX]=CX;
 	JX++;
-	jumpback=CX;  //çºªå½•whileå¾ªç¯æ‰§è¡Œæ—¶éœ€è¦å¾€å‰è¿”å›çš„åœ°å€
+	jumpback=CX;  //¼ÍÂ¼whileÑ­»·Ö´ĞĞÊ±ĞèÒªÍùÇ°·µ»ØµÄµØÖ·
 
 	/////////////////////////////////////////////////////////////////
 	SYMLIST * tempList=new SYMLIST;
@@ -1210,22 +1245,194 @@ void WHILESTATEMENT(SYMLIST * list)  //while è¯­å¥çš„åˆ†æ
 	/////////////////////////////////////////////////////////////////
 
 	if(typeItem.typ!=BOOLS)
-		error(32);  //ifæˆ–whileåé¢çš„è¡¨è¾¾å¼ç±»å‹åº”è¯¥æ˜¯å¸ƒå°”ç±»å‹
-	fillBackFalse=CX;  //æ¡ä»¶æµ‹è¯•å¤±è´¥åä»å“ªé‡Œå¾€å¾ªç¯â€œå¤–â€è·³
+		error(32);  //if»òwhileºóÃæµÄ±í´ïÊ½ÀàĞÍÓ¦¸ÃÊÇ²¼¶ûÀàĞÍ
+	fillBackFalse=CX;  //Ìõ¼ş²âÊÔÊ§°Üºó´ÓÄÄÀïÍùÑ­»·¡°Íâ¡±Ìø
 	GEN(JPC,0,0);
 	if(CurSymbol->type==DOSYM)
 		getASymbol();
 	else
-		error(9);//åº”è¯¥æ˜¯'do'
+		error(9);//Ó¦¸ÃÊÇ'do'
 
-	STATEMENT(list);  //åˆ†æè¯­å¥
+	STATEMENT(list);  //·ÖÎöÓï¾ä
 	GEN(JMP,0,jumpback);
-	CODE[fillBackFalse].address=CX;  //å›å¡«
+	CODE[fillBackFalse].address=CX;  //»ØÌî
 	JUMADRTAB[JX]=CX;
 	JX++;
 }
 
-void COMPOUND(SYMLIST * list)  //begin å¼€å¤´çš„ç»„åˆè¯­å¥çš„åˆ†æ
+
+// FOR <Ñ­»·±äÁ¿> := <³õÖµ> TO/DOWNTO <ÖÕÖµ> DO
+//   BEGIN
+//     <Ñ­»·Ìå>
+//   END;
+
+void FORSTATEMENT(SYMLIST * list)  //for Óï¾äµÄ·ÖÎö
+{
+	TYPEITEM typeItem;
+	int jumpback,fillBackFalse;
+
+	getASymbol();
+	JUMADRTAB[JX]=CX;
+	JX++;
+
+	if(CurSymbol->type != IDENT)
+	{
+		printf("CurSymbol->%d\n",CurSymbol->type);
+		error(44);//Ó¦¸ÃÊÇ¸³ÖµÓï¾ä
+	}
+	ASSIGNMENT(list); //·ÖÎö¸³ÖµÓï¾ä
+
+	if(CurSymbol->type==TOSYM) //·ÖÎöTO
+		getASymbol();
+	else
+	{
+		printf("CurSymbol->%d\n",CurSymbol->type);	
+		error(45);//Ó¦¸ÃÊÇ'to'
+	}
+	// if (GETPOSITION(CurSymbol->value.lpValue) == 0) error(33); //¼ì²â±êÊ¶·û
+
+	jumpback=CX;  //¼ÍÂ¼forÑ­»·Ö´ĞĞÊ±ĞèÒªÍùÇ°·µ»ØµÄµØÖ·
+	/////////////////////////////////////////////////////////////////
+	SYMLIST * tempList=new SYMLIST;
+	COPYLIST(tempList,listAddSym(list,DOSYM));
+	EXPRESSION(tempList,typeItem);
+	delete tempList;
+	/////////////////////////////////////////////////////////////////
+	if(typeItem.typ!=BOOLS)
+		error(32);  //if»òwhileºóÃæµÄ±í´ïÊ½ÀàĞÍÓ¦¸ÃÊÇ²¼¶ûÀàĞÍ
+	fillBackFalse=CX;  //Ìõ¼ş²âÊÔÊ§°Üºó´ÓÄÄÀïÍùÑ­»·¡°Íâ¡±Ìø
+	GEN(JPC,0,0);
+	if(CurSymbol->type==DOSYM)
+		getASymbol();
+	else
+		error(9);//Ó¦¸ÃÊÇ'do'
+
+	STATEMENT(list);  //·ÖÎöÓï¾ä
+	GEN(JMP,0,jumpback);
+	CODE[fillBackFalse].address=CX;  //»ØÌî
+	JUMADRTAB[JX]=CX;
+	JX++;
+}
+
+// REPEAT
+//     <Ñ­»·Ìå>
+// UNTIL <²¼¶û±í´ïÊ½>
+
+
+void REPEATSTATEMENT(SYMLIST * list)  //repeat Óï¾äµÄ·ÖÎö
+{
+	TYPEITEM typeItem;
+	int jumpback,fillBackFalse;
+
+	getASymbol();
+	JUMADRTAB[JX]=CX;
+	JX++;
+	
+	jumpback=CX;  //¼ÍÂ¼whileÑ­»·Ö´ĞĞÊ±ĞèÒªÍùÇ°·µ»ØµÄµØÖ·
+
+	STATEMENT(list);  //·ÖÎöÓï¾ä
+	
+	if(CurSymbol->type==UNTILSYM) //·ÖÎöuntil
+		getASymbol();
+	else
+	{
+		// printf("CurSymbol->%d\n",CurSymbol->type);	
+		error(46);//Ó¦¸ÃÊÇ'until'
+	}
+	/////////////////////////////////////////////////////////////////
+	SYMLIST * tempList=new SYMLIST;
+	COPYLIST(tempList,listAddSym(list,UNTILSYM));
+	EXPRESSION(tempList,typeItem); //bool 
+	delete tempList;
+	/////////////////////////////////////////////////////////////////
+	if(typeItem.typ!=BOOLS)
+		error(32);  //if»òwhileºóÃæµÄ±í´ïÊ½ÀàĞÍÓ¦¸ÃÊÇ²¼¶ûÀàĞÍ
+
+	fillBackFalse=CX;  //Ìõ¼ş²âÊÔÊ§°Üºó´ÓÄÄÀïÍùÑ­»·¡°Íâ¡±Ìø
+	GEN(JPC,0,0);
+	GEN(JMP,0,jumpback);
+	CODE[fillBackFalse].address=CX;  //»ØÌî
+	JUMADRTAB[JX]=CX;
+	JX++;
+}
+
+// CASE oper OF
+//   '+' : result := x+y;
+//   '-' : result := x-y;
+//   '*' : result := x*y;
+//   '/' : result := x/y; 
+// END
+
+void CASESTATEMENT(SYMLIST * list)  //case Óï¾äµÄ·ÖÎö
+{
+	TYPEITEM typeItem;
+	int level, CX1, jumpback, CX3;
+	jumpback = CX;
+	JUMADRTAB[JX] = CX;
+	JX++;
+	
+	getASymbol(); //¹ıµô¡°case¡±
+
+	/////////////////////////////////////////////////////
+	SYMLIST* tempList1 = new SYMLIST;
+	COPYLIST(tempList1, listAddSym(list, OFSYM));
+	EXPRESSION(tempList1, typeItem);
+	delete tempList1;
+	/////////////////////////////////////////////////////
+	
+	CX3 = CX;
+	
+	if (CurSymbol->type != OFSYM) {
+		error(10);
+	}
+	/*¼ÇÂ¼ case Óï¾äÖĞÇé¿öµÄ¸öÊı*/
+	int case_num = 0;
+	int caseN[100];
+
+	memset(caseN, 0, sizeof caseN);
+	do
+	{
+		int temp = jumpback;
+		while (temp < CX3) {
+			CODE[CX] = CODE[temp];
+			temp++;
+			CX++;
+		}
+		getASymbol();
+		if (CurSymbol->type == ENDSYM) {
+			getASymbol(); //Ê¶±ğµ½ÁËend£¬¹ıµôend
+			break;
+		}
+
+		///////////////////////////////////////////////////////////////////////
+		SYMLIST* tempList1 = new SYMLIST;
+		COPYLIST(tempList1, listAddSym(list, SEMICOLON));
+		SIMPLEEXPRESSION(tempList1, typeItem);
+		delete tempList1;
+		///////////////////////////////////////////////////////////////////////
+		
+		if (CurSymbol->type != COLON) error(0); //´¦ÀíÃ°ºÅ
+		getASymbol();
+
+		GEN(EQ, 0, 0);
+		CX1 = CX;
+		GEN(JPC, 0, 0);
+
+		STATEMENT(list); //Ê¶±ğÃ°ºÅºóµÄÓï¾ä
+		caseN[case_num++] = CX;
+		GEN(JMP, 0, 0);
+		CODE[CX1].address = CX;
+	} while (CurSymbol->type == SEMICOLON);//ÊÇ·ÖºÅ£¬¼ÌĞøÖ´ĞĞ
+
+	for (int k = 0; k < case_num; k++){
+	     CODE[caseN[k]].address = CX; //Ã¿ÌõÓï¾ä³É¹¦ºó¶¼Ìøµ½½áÎ²
+		 JUMADRTAB[JX] = CX;
+		 JX++;
+    }
+	
+}
+
+void COMPOUND(SYMLIST * list)  //begin ¿ªÍ·µÄ×éºÏÓï¾äµÄ·ÖÎö
 {
 	getASymbol();
 
@@ -1239,27 +1446,27 @@ void COMPOUND(SYMLIST * list)  //begin å¼€å¤´çš„ç»„åˆè¯­å¥çš„åˆ†æ
 	COPYLIST(tempList1,listAddSym(&STATBEGSYS,SEMICOLON));
 	///////////////////////////////////////////////////////////
 
-	while(SYMINLIST(CurSymbol->type,tempList1))  //ä¸€æ¡æ¡çš„åˆ†æè¯­å¥
+	while(SYMINLIST(CurSymbol->type,tempList1))  //Ò»ÌõÌõµÄ·ÖÎöÓï¾ä
 	{
 		if(CurSymbol->type==SEMICOLON)
 			getASymbol();
 		else
-			error(1);//åº”è¯¥æ˜¯';'
+			error(1);//Ó¦¸ÃÊÇ';'
 	    STATEMENT(tempList);  
 	}
 	if(CurSymbol->type==ENDSYM)
 		getASymbol();
 	else
-		error(12);  //åº”è¯¥æ˜¯'end'
+		error(12);  //Ó¦¸ÃÊÇ'end'
 	delete tempList;delete tempList1;
 }
 
-void STANDPROC(SYMLIST * list,int i)  //ä¸¤ä¸ªåŸºæœ¬è¿‡ç¨‹readå’Œwriteçš„è°ƒç”¨ï¼Œä»–ä»¬åœ¨ç¬¦å·è¡¨é‡Œé¢åˆ†åˆ«åœ¨ç¬¬å…­é¡¹å’Œç¬¬ä¸ƒé¡¹
+void STANDPROC(SYMLIST * list,int i)  //Á½¸ö»ù±¾¹ı³ÌreadºÍwriteµÄµ÷ÓÃ£¬ËûÃÇÔÚ·ûºÅ±íÀïÃæ·Ö±ğÔÚµÚÁùÏîºÍµÚÆßÏî
 {
 	int helper;
 	TYPEITEM typeItem;
 
-	if(i==6)//å¦‚æœæ˜¯ç¬¬å…­é¡¹ï¼Œread();
+	if(i==6)//Èç¹ûÊÇµÚÁùÏî£¬read();
 	{
 		getASymbol();
 		if(CurSymbol->type==LPAREN)
@@ -1271,15 +1478,15 @@ void STANDPROC(SYMLIST * list,int i)  //ä¸¤ä¸ªåŸºæœ¬è¿‡ç¨‹readå’Œwriteçš„è°ƒç”¨ï
 				{
 					helper=GETPOSITION(CurSymbol->value.lpValue);
 					getASymbol();
-					if(helper==0)
+					if (helper == 0)
 					{
-						error(33);//æ ‡è¯†ç¬¦æ²¡æœ‰å®šä¹‰
+						error(33);//±êÊ¶·ûÃ»ÓĞ¶¨Òå
 					}
 					else
 					{
 						if(NAMETAB[helper].kind!=VARIABLE)
 						{
-							error(16);//åº”è¯¥æ˜¯å˜é‡
+							error(16);//Ó¦¸ÃÊÇ±äÁ¿
 							helper=0;
 						}
 						else
@@ -1305,26 +1512,27 @@ void STANDPROC(SYMLIST * list,int i)  //ä¸¤ä¸ªåŸºæœ¬è¿‡ç¨‹readå’Œwriteçš„è°ƒç”¨ï
 							else if(typeItem.typ==CHARS)
 								GEN(RED,0,1);
 							else
-								error(35);//æ“ä½œæ•°ç±»å‹é”™è¯¯
+								error(35);//²Ù×÷ÊıÀàĞÍ´íÎó
 						}
 					}
 				}
 				else
-					error(14);//åº”è¯¥æ˜¯æ ‡è¯†ç¬¦
+					error(14);//Ó¦¸ÃÊÇ±êÊ¶·û
 			}while(CurSymbol->type==COMMA);
 
 			if(CurSymbol->type!=RPAREN)
 			{	
-				error(2);//åº”è¯¥æ˜¯')'
+				error(2);//Ó¦¸ÃÊÇ')'
 			}
 			else 
 				getASymbol();
 		}
 		else
-			error(3);//åº”è¯¥æ˜¯'('
+			error(3);//Ó¦¸ÃÊÇ'('
 	}
-	else if(i==7)//å¦‚æœæ˜¯ç¬¬ä¸ƒé¡¹ï¼Œwrite();
+	else if(i==7)//Èç¹ûÊÇµÚÆßÏî£¬write();
 	{
+		// printf("TEST:IN WRITE\n");
 		getASymbol();
 		if(CurSymbol->type==LPAREN)
 		{
@@ -1343,21 +1551,21 @@ void STANDPROC(SYMLIST * list,int i)  //ä¸¤ä¸ªåŸºæœ¬è¿‡ç¨‹readå’Œwriteçš„è°ƒç”¨ï
 				else if(typeItem.typ==CHARS)
 					GEN(WRT,0,1);
 				else
-					error(35);//æ“ä½œæ•°ç±»å‹å‡ºé”™
+					error(35);//²Ù×÷ÊıÀàĞÍ³ö´í
 			}
 			while(CurSymbol->type==COMMA);
 			
 			if(CurSymbol->type!=RPAREN)
-				error(2);//åº”è¯¥æ˜¯')'
+				error(2);//Ó¦¸ÃÊÇ')'
 			else
 				getASymbol();
 		}
 		else
-			error(3);//åº”è¯¥æ˜¯'('
+			error(3);//Ó¦¸ÃÊÇ'('
 	}
 }
 
-void CALL(SYMLIST * list)  //è°ƒç”¨è¯­å¥çš„åˆ†æ
+void CALL(SYMLIST * list)  //µ÷ÓÃÓï¾äµÄ·ÖÎö
 {
 	int i,lastPar,cp,k;
 	TYPEITEM typeItem;
@@ -1367,22 +1575,23 @@ void CALL(SYMLIST * list)  //è°ƒç”¨è¯­å¥çš„åˆ†æ
 	COPYLIST(tempList,listAddSym(listAddSym(list,RPAREN),COMMA));
     /////////////////////////////////////////////////////////////
 
+	// printf("TEST:call sth.\n");
 	getASymbol();
 	if(CurSymbol->type==IDENT)
 	{
 		i=GETPOSITION(CurSymbol->value.lpValue);
 		if(NAMETAB[i].kind==PROCEDURE)
 		{
-			if(NAMETAB[i].level==0)  //å¦‚æœåœ¨â€œè¿‡ç¨‹é›¶â€ï¼Œé‚£ä¹ˆå¿…å®šæ˜¯read æˆ–è€… write
+			if(NAMETAB[i].level==0)  //Èç¹ûÔÚ¡°¹ı³ÌÁã¡±£¬ÄÇÃ´±Ø¶¨ÊÇread »òÕß write
 				STANDPROC(list,i);
 			else
 			{
 				getASymbol();
-				GEN(OPAC,0,0);//æ‰“å¼€æ´»åŠ¨è®°å½•
+				GEN(OPAC,0,0);//´ò¿ª»î¶¯¼ÇÂ¼
 				lastPar=BTAB[NAMETAB[i].ref].lastPar;
 				cp=i;
 				if(CurSymbol->type==LPAREN)
-				{//å®åœ¨å‚æ•°åˆ—è¡¨
+				{//ÊµÔÚ²ÎÊıÁĞ±í
 					/////////////////////////////////////////////////////////
 					SYMLIST * tempList1=new SYMLIST;
 					COPYLIST(tempList1,listAddSym(listAddSym(listAddSym(list,RPAREN),COLON),COMMA));					
@@ -1391,28 +1600,28 @@ void CALL(SYMLIST * list)  //è°ƒç”¨è¯­å¥çš„åˆ†æ
 					{
 						getASymbol();
 						if(cp>=lastPar)
-							error(28);//å®å‚ä¸å½¢å‚ä¸ªæ•°ä¸ç­‰
+							error(28);//Êµ²ÎÓëĞÎ²Î¸öÊı²»µÈ
 						else
 						{
 							cp++;
 							if(NAMETAB[cp].normal)
-							{//å€¼å‚æ•°
+							{//Öµ²ÎÊı
 
 								EXPRESSION(tempList1,typeItem);
 								if(typeItem.typ==NAMETAB[cp].type)
 								{
 									if(typeItem.ref!=NAMETAB[cp].ref)
-										error(29);//å®å‚ä¸å½¢å‚ç±»å‹ä¸ä¸€è‡´
+										error(29);//Êµ²ÎÓëĞÎ²ÎÀàĞÍ²»Ò»ÖÂ
 									else if(typeItem.typ==ARRAYS)
 										GEN(LODB,0,ATAB[typeItem.ref].size);
 								}
 								else
-									error(29);//å®å‚ä¸å½¢å‚ç±»å‹ä¸ä¸€è‡´
+									error(29);//Êµ²ÎÓëĞÎ²ÎÀàĞÍ²»Ò»ÖÂ
 							}
 							else
-							{//å½¢å¼å‚æ•°
+							{//ĞÎÊ½²ÎÊı
 								if(CurSymbol->type!=IDENT)
-									error(14);//åº”è¯¥æ˜¯æ ‡è¯†ç¬¦
+									error(14);//Ó¦¸ÃÊÇ±êÊ¶·û
 								else
 								{
 									k=GETPOSITION(CurSymbol->value.lpValue);
@@ -1420,7 +1629,7 @@ void CALL(SYMLIST * list)  //è°ƒç”¨è¯­å¥çš„åˆ†æ
 									if(k!=0)
 									{
 										if(NAMETAB[k].kind!=VARIABLE)
-											error(16);//åº”è¯¥æ˜¯å˜é‡
+											error(16);//Ó¦¸ÃÊÇ±äÁ¿
 										typeItem.typ=NAMETAB[k].type;
 										typeItem.ref=NAMETAB[k].ref;
 										if(NAMETAB[k].normal)
@@ -1432,7 +1641,7 @@ void CALL(SYMLIST * list)  //è°ƒç”¨è¯­å¥çš„åˆ†æ
 											ARRAYELEMENT(tempList,typeItem);
 										}
 										if(NAMETAB[cp].type!=typeItem.typ || NAMETAB[cp].ref!=typeItem.ref)
-											error(29);//å®å‚ä¸å½¢å‚ç±»å‹ä¸ä¸€è‡´
+											error(29);//Êµ²ÎÓëĞÎ²ÎÀàĞÍ²»Ò»ÖÂ
 									}
 								}
 							}
@@ -1443,31 +1652,32 @@ void CALL(SYMLIST * list)  //è°ƒç”¨è¯­å¥çš„åˆ†æ
 					if(CurSymbol->type==RPAREN)
 						getASymbol();
 					else
-						error(2);//åº”è¯¥æ˜¯')'
+						error(2);//Ó¦¸ÃÊÇ')'
 				}
 				if(cp<lastPar)
-					error(30);//å®åœ¨å‚æ•°ä¸ªæ•°ä¸å¤Ÿ
-				GEN(CAL,NAMETAB[i].level,NAMETAB[i].unite.address);
+					error(30);//ÊµÔÚ²ÎÊı¸öÊı²»¹»
+				GEN(CAL1,NAMETAB[i].level,NAMETAB[i].unite.address);
 				if(NAMETAB[i].level<displayLevel)
 					GEN(UDIS,NAMETAB[i].level,displayLevel);
 			}
 		}
 		else
-			error(18);//åº”è¯¥æ˜¯è¿‡ç¨‹å
+			error(18);//Ó¦¸ÃÊÇ¹ı³ÌÃû
 	}
 	else
-		error(14);//åº”è¯¥æ˜¯æ ‡è¯†ç¬¦
+		error(14);//Ó¦¸ÃÊÇ±êÊ¶·û
 	delete tempList;
 }
 
-void STATEMENT(SYMLIST * list)  //æ™®é€šè¯­å¥çš„åˆ†æï¼Œè¿™äº›è¯­å¥æœ‰å‡ ç§å½¢å¼ï¼Œåˆ†åˆ«ä»¥ä¸åŒçš„æ ‡è¯†ç¬¦å¼€å¤´
+void STATEMENT(SYMLIST * list)  //ÆÕÍ¨Óï¾äµÄ·ÖÎö£¬ÕâĞ©Óï¾äÓĞ¼¸ÖÖĞÎÊ½£¬·Ö±ğÒÔ²»Í¬µÄ±êÊ¶·û¿ªÍ·
 {
+	// printf("TEST:in STATEMENT\n");
 	////////////////////////////////////////////////////
 	SYMLIST * tempList=new SYMLIST;
 	COPYLIST(tempList,listAddSym(&STATBEGSYS,IDENT));
 	////////////////////////////////////////////////////
 
-	if(SYMINLIST(CurSymbol->type,tempList))  //é€šè¿‡ä¸åŒçš„æ ‡è¯†ç¬¦è¾¨åˆ«æ˜¯é‚£ç§è¯­å¥
+	if(SYMINLIST(CurSymbol->type,tempList))  //Í¨¹ı²»Í¬µÄ±êÊ¶·û±æ±ğÊÇÄÇÖÖÓï¾ä
 	{
 		switch(CurSymbol->type)
 		{
@@ -1476,24 +1686,29 @@ void STATEMENT(SYMLIST * list)  //æ™®é€šè¯­å¥çš„åˆ†æï¼Œè¿™äº›è¯­å¥æœ‰å‡ ç§å
 		case IFSYM: IFSTATEMENT(list);break;
 		case WHILESYM: WHILESTATEMENT(list);break;
 		case BEGINSYM: COMPOUND(list);break;
+		case REPEATSYM:REPEATSTATEMENT(list); break;
+		case FORSYM:FORSTATEMENT(list); break;
+		case CASESYM:CASESTATEMENT(list); break;
 		}
 	}
 	delete tempList;
+	// printf("TEST:out STATEMENT\n");
 }
 
 
-void BLOCK(SYMLIST * list,int level)  //è¿‡ç¨‹ä½“çš„åˆ†æ
+void BLOCK(SYMLIST * list,int level)  //¹ı³ÌÌåµÄ·ÖÎö
 {
+	// printf("TEST:in BLOCK\n");
 	int cx,tx,programBlock;
     int dx;
-	dx=DX;//çºªå½•é™æ€ä¸Šå±‚å±€éƒ¨æ•°æ®åŒºå¤§å°
-	DX=3;//å°†æœ¬ç¨‹åºä½“çš„æ´»åŠ¨è®°å½•ç•™å‡ºä¸‰ä¸ªå•å…ƒå‡ºæ¥ï¼Œç”¨åšè¿æ¥æ•°æ®
+	dx=DX;//¼ÍÂ¼¾²Ì¬ÉÏ²ã¾Ö²¿Êı¾İÇø´óĞ¡
+	DX=3;//½«±¾³ÌĞòÌåµÄ»î¶¯¼ÇÂ¼Áô³öÈı¸öµ¥Ôª³öÀ´£¬ÓÃ×öÁ¬½ÓÊı¾İ
 	tx=TX;
 	NAMETAB[tx].unite.address=CX;
 
 	if(displayLevel>MAXLEVELDEPTH)
-		error(26);//ç¨‹åºä½“è¡¨æº¢å‡º
-	ENTERBLOCK();  //ç™»è®°è¿‡ç¨‹ä½“
+		error(26);//³ÌĞòÌå±íÒç³ö
+	ENTERBLOCK();  //µÇ¼Ç¹ı³ÌÌå
 	programBlock=BX;
 	DISPLAY[displayLevel]=BX;
 	NAMETAB[tx].type=NOTYP;
@@ -1501,31 +1716,31 @@ void BLOCK(SYMLIST * list,int level)  //è¿‡ç¨‹ä½“çš„åˆ†æ
 
 	if(CurSymbol->type==LPAREN && displayLevel>1)
 	{
-		PARAMENTERLIST(list);  //ç¼–è¯‘è¿‡ç¨‹åˆ—è¡¨
+		PARAMENTERLIST(list);  //±àÒë¹ı³ÌÁĞ±í
 		if(CurSymbol->type==SEMICOLON)
 			getASymbol();
 		else
-			error(1);//åº”è¯¥æ˜¯';'
+			error(1);//Ó¦¸ÃÊÇ';'
 	}
 	else if(displayLevel>1)
 	{
 		if(CurSymbol->type==SEMICOLON)
 			getASymbol();
 		else
-			error(1);//åº”è¯¥æ˜¯';'
+			error(1);//Ó¦¸ÃÊÇ';'
 	}
 	BTAB[programBlock].lastPar=TX;
 	BTAB[programBlock].pSize=DX;
 	GEN(JMP,0,0);
 	do
 	{
-		switch(CurSymbol->type)  //é’ˆå¯¹å½“å‰ä¸åŒçš„ä¸å¥½è¿›è¡Œä¸åŒçš„å£°æ˜
+		switch(CurSymbol->type)  //Õë¶Ôµ±Ç°²»Í¬µÄ²»ºÃ½øĞĞ²»Í¬µÄÉùÃ÷
 		{			
 		case CONSTSYM:
 			getASymbol();
 			do
 			{
-				CONSTDECLARATION(list);  //å¸¸é‡å£°æ˜ï¼Œä¸€æ¬¡å¯å£°æ˜å¤šä¸ª
+				CONSTDECLARATION(list);  //³£Á¿ÉùÃ÷£¬Ò»´Î¿ÉÉùÃ÷¶à¸ö
 			}
 			while(CurSymbol->type==IDENT);
 			break;
@@ -1533,7 +1748,7 @@ void BLOCK(SYMLIST * list,int level)  //è¿‡ç¨‹ä½“çš„åˆ†æ
 			getASymbol();
 			do
 			{
-				TYPEDECLARATION(list);  //ç±»å‹å£°æ˜ï¼Œä¸€æ¬¡å¯å£°æ˜å¤šä¸ª
+				TYPEDECLARATION(list);  //ÀàĞÍÉùÃ÷£¬Ò»´Î¿ÉÉùÃ÷¶à¸ö
 			}
 			while(CurSymbol->type==IDENT);
 			break;
@@ -1541,78 +1756,84 @@ void BLOCK(SYMLIST * list,int level)  //è¿‡ç¨‹ä½“çš„åˆ†æ
 			getASymbol();
 			do
 			{
-				VARDECLARATION(list);  //å˜é‡å£°æ˜ï¼Œä¸€æ¬¡å¯å£°æ˜å¤šä¸ª
+				VARDECLARATION(list);  //±äÁ¿ÉùÃ÷£¬Ò»´Î¿ÉÉùÃ÷¶à¸ö
 			}
 			while(CurSymbol->type==IDENT);				
 			break;
 		}
 		while(CurSymbol->type==PROCSYM)
-			PROCDECLARATION(list);    //è¿‡ç¨‹å£°æ˜ï¼Œæ¯æ¬¡åªèƒ½å£°æ˜ä¸€ä¸ª
+			PROCDECLARATION(list);    //¹ı³ÌÉùÃ÷£¬Ã¿´ÎÖ»ÄÜÉùÃ÷Ò»¸ö
 	}while(SYMINLIST(CurSymbol->type,&DECLBEGSYS));
-	CODE[NAMETAB[tx].unite.address].address=CX;//å°†æ‰§è¡Œè¯­å¥çš„å¼€å§‹å¤„åœ°å€å›å¡«
+	CODE[NAMETAB[tx].unite.address].address=CX;//½«Ö´ĞĞÓï¾äµÄ¿ªÊ¼´¦µØÖ·»ØÌî
 	JUMADRTAB[JX]=CX;
 	JX++;
-	NAMETAB[tx].unite.address=CX;//ä»£ç å¼€å§‹åœ°å€
+	NAMETAB[tx].unite.address=CX;//´úÂë¿ªÊ¼µØÖ·
 	cx=CX;
 	GEN(ENTP,displayLevel,DX);
 
 	////////////////////////////////////////////////////
 	SYMLIST * tempList=new SYMLIST;
 	COPYLIST(tempList,listAddSym(listAddSym(list,ENDSYM),SEMICOLON));
+
+	// printf("TEST:before STATEMENT\n");
 	STATEMENT(tempList);
+	// printf("TEST:after STATEMENT\n");
 	delete tempList;
 	////////////////////////////////////////////////////
-    CODE[cx].address=DX;//å›å¡«æ•°æ®åŒºå¤§å°
+    CODE[cx].address=DX;//»ØÌîÊı¾İÇø´óĞ¡
 	if(displayLevel>1)
-		GEN(RETP,0,0);//ä»ç¨‹åºä½“è¿”å›
+		GEN(RETP,0,0);//´Ó³ÌĞòÌå·µ»Ø
 	else
-		GEN(ENDP,0,0);//ç¨‹åºç»“æŸ
+		GEN(ENDP,0,0);//³ÌĞò½áÊø
 	QUITBLOCK();
-	DX=dx;//æ¢å¤é™æ€ä¸Šå±‚å±€éƒ¨æ•°æ®åŒºå¤§å°
+	DX=dx;//»Ö¸´¾²Ì¬ÉÏ²ã¾Ö²¿Êı¾İÇø´óĞ¡
+	// printf("TEST:out BLOCK\n");
 }
 
-int Feof(FILE *fp)//åˆ¤æ–­æ˜¯å¦åˆ°äº†æºæ–‡ä»¶å°¾
+int Feof(FILE *fp)//ÅĞ¶ÏÊÇ·ñµ½ÁËÔ´ÎÄ¼şÎ²
 {
 	int getChar;
 	getChar=fgetc(fp);
 	if(getChar==-1)
 	{
 		if(feof(fp))
-			return 1;//å¦‚æœæ˜¯ï¼Œè¿”å›â€œçœŸâ€
+			return 1;//Èç¹ûÊÇ£¬·µ»Ø¡°Õæ¡±
 	}
 	else
-		fseek(fp,-1,SEEK_CUR);//å¦åˆ™ï¼Œå°†æŒ‡å‘æ–‡ä»¶æµçš„æŒ‡é’ˆå‘åç§»åŠ¨ä¸€ä¸ªå­—ç¬¦
+		fseek(fp,-1,SEEK_CUR);//·ñÔò£¬½«Ö¸ÏòÎÄ¼şÁ÷µÄÖ¸ÕëÏòºóÒÆ¶¯Ò»¸ö×Ö·û
 	return 0;
 }
 
 
-SYMBOL GetReserveWord(char *nameValue)//åˆ¤æ–­å¾—åˆ°çš„ç¬¦å·æ˜¯å¦æ˜¯ä¿ç•™å­—
+SYMBOL GetReserveWord(char *nameValue)//ÅĞ¶ÏµÃµ½µÄ·ûºÅÊÇ·ñÊÇ±£Áô×Ö
 {
 	int i;
 
 	char reserveWord[NUMOFWORD][20]=
 	{
-		"and","begin","const","else","if","not","or","program","type","while",
-		"array","call","do","end","mod","of","procedure","then","var"
+		"and","begin","const","else","if","not","or","program","type","while","for",
+		"array","call","do","end","mod","of","procedure","then","var","to","repeat",
+		"until","case"
 	};
 	SYMBOL reserveType[NUMOFWORD]=
 	{
-		ANDSYM,BEGINSYM,CONSTSYM,ELSESYM,IFSYM,NOTSYM,ORSYM,PROGRAMSYM,TYPESYM,WHILESYM,
-		ARRAYSYM,CALLSYM,DOSYM,ENDSYM,MODSYM,OFSYM,PROCSYM,THENSYM,VARSYM
+		ANDSYM,BEGINSYM,CONSTSYM,ELSESYM,IFSYM,NOTSYM,ORSYM,PROGRAMSYM,TYPESYM,WHILESYM,FORSYM,
+		ARRAYSYM,CALLSYM,DOSYM,ENDSYM,MODSYM,OFSYM,PROCSYM,THENSYM,VARSYM,TOSYM,REPEATSYM,UNTILSYM,
+		CASESYM
 	};
 
-	for(i=0;i<NUMOFWORD;i++)  //è¿™é‡Œé‡‡ç”¨äº†éå†çš„åšæ³•ï¼Œä½†æ˜¯æ•ˆç‡ä¸é«˜ï¼Œå¯ä»¥è€ƒè™‘é‡‡ç”¨äºŒå‰æŸ¥æ‰¾æ³•
+	for(i=0;i<NUMOFWORD;i++)  //ÕâÀï²ÉÓÃÁË±éÀúµÄ×ö·¨£¬µ«ÊÇĞ§ÂÊ²»¸ß£¬¿ÉÒÔ¿¼ÂÇ²ÉÓÃ¶ş²æ²éÕÒ·¨
 		if(!stricmp(reserveWord[i],nameValue))
 			return reserveType[i];
 	return (SYMBOL)0;
 }
 
-void AddSymbolNode(SymbolItem **current,int lineNumber,SYMBOL type,int iValue)  //åœ¨è¯æ³•åˆ†æçš„æ—¶å€™å‘ç¬¦å·åˆ—è¡¨ä¸­åŠ å…¥ä¸€ä¸ªåˆ†æå‡ºæ¥çš„ç¬¦å·
+void AddSymbolNode(SymbolItem **current,int lineNumber,SYMBOL type,int iValue)  //ÔÚ´Ê·¨·ÖÎöµÄÊ±ºòÏò·ûºÅÁĞ±íÖĞ¼ÓÈëÒ»¸ö·ÖÎö³öÀ´µÄ·ûºÅ
 {
 		(*current)->next=new SymbolItem;
 		if(!(*current)->next)
 		{
-			error(27);//ç³»ç»Ÿä¸ºæœ¬ç¼–è¯‘ç¨‹åºåˆ†é…çš„å †ä¸å¤Ÿç”¨
+			error(27);//ÏµÍ³Îª±¾±àÒë³ÌĞò·ÖÅäµÄ¶Ñ²»¹»ÓÃ
 			exit(4);
 		}
 		(*current)=(*current)->next;
@@ -1622,7 +1843,7 @@ void AddSymbolNode(SymbolItem **current,int lineNumber,SYMBOL type,int iValue)  
 		(*current)->next=NULL; 
 }
 
-void getSymbols(FILE *srcFile)  //ä»æºæ–‡ä»¶è¯»å…¥å­—ç¬¦ï¼Œè·å¾—ç¬¦å·é“¾è¡¨
+void getSymbols(FILE *srcFile)  //´ÓÔ´ÎÄ¼ş¶ÁÈë×Ö·û£¬»ñµÃ·ûºÅÁ´±í
 {
 	int lineNumber=1;
 	char nameValue[MAXSYMNAMESIZE];
@@ -1630,7 +1851,7 @@ void getSymbols(FILE *srcFile)  //ä»æºæ–‡ä»¶è¯»å…¥å­—ç¬¦ï¼Œè·å¾—ç¬¦å·é“¾è¡¨
 	char readChar;
 	SymbolItem head,*current=&head;
 
-	printf("\nè¿›è¡Œè¯æ³•åˆ†æ  -->-->-->-->-->-->-->-->  ");
+	printf("\n½øĞĞ´Ê·¨·ÖÎö  -->-->-->-->-->-->-->-->  ");
 
 	while(!Feof(srcFile))
 	{
@@ -1645,7 +1866,7 @@ void getSymbols(FILE *srcFile)  //ä»æºæ–‡ä»¶è¯»å…¥å­—ç¬¦ï¼Œè·å¾—ç¬¦å·é“¾è¡¨
 				readChar=fgetc(srcFile);
 				if(Feof(srcFile)) 
 					break;
-			}while(iscsym(readChar) || isdigit(readChar)); 
+			}while(iscsym(readChar) || isdigit(readChar)); //ÅĞ¶ÏÊÇ²»ÊÇ×ÖÄ¸Êı×Ö»òÏÂ»®Ïß
 			nameValue[nameValueint]=0;
 			fseek(srcFile,-1,SEEK_CUR);
 			current->next=new SymbolItem;
@@ -1675,7 +1896,7 @@ void getSymbols(FILE *srcFile)  //ä»æºæ–‡ä»¶è¯»å…¥å­—ç¬¦ï¼Œè·å¾—ç¬¦å·é“¾è¡¨
 		}
 		else switch(readChar)
 		{
-			case '	':				//å­—ç¬¦ 'tab'
+			case '	':				//×Ö·û 'tab'
 			case ' ':	
 				break;
 			case '\n':
@@ -1746,10 +1967,30 @@ void getSymbols(FILE *srcFile)  //ä»æºæ–‡ä»¶è¯»å…¥å­—ç¬¦ï¼Œè·å¾—ç¬¦å·é“¾è¡¨
 					error(1);//////////////////////////
 				break;
 			case '+':
+//ĞÂÌí¼Ó
+				if (Feof(srcFile))
+					break;
+				readChar = fgetc(srcFile);
+				if (readChar == '=')
+					AddSymbolNode(&current, lineNumber, PLUSBECOMES, 0);
+				else 
+				{
+					fseek(srcFile, -1, SEEK_CUR);
 				AddSymbolNode(&current,lineNumber,PLUS,0);
+				}
+//ĞÂÌí¼Ó					
 				break;
 			case '-':
+				if (Feof(srcFile))
+					break;
+				readChar = fgetc(srcFile);
+				if (readChar == '=')
+					AddSymbolNode(&current, lineNumber, MINUSBECOMES, 0);
+				else
+				{
+					fseek(srcFile, -1, SEEK_CUR);
 				AddSymbolNode(&current,lineNumber,MINUS,0);
+				}
 				break;
 			case '*':
 				AddSymbolNode(&current,lineNumber,TIMES,0);
@@ -1790,22 +2031,22 @@ void getSymbols(FILE *srcFile)  //ä»æºæ–‡ä»¶è¯»å…¥å­—ç¬¦ï¼Œè·å¾—ç¬¦å·é“¾è¡¨
 		exit(2);
 	}
 	else
-		printf("è¯æ³•åˆ†ææˆåŠŸï¼\n\n");
+		printf("´Ê·¨·ÖÎö³É¹¦£¡\n\n");
 }
 
-void getASymbol()  //é‡‡ç”¨é€’å½’ä¸‹é™çš„è¯­æ³•åˆ†æï¼Œé€ä¸ªçš„è·å–ä¸€ä¸ªå•è¯ç¬¦å·
+void getASymbol()  //²ÉÓÃµİ¹éÏÂ½µµÄÓï·¨·ÖÎö£¬Öğ¸öµÄ»ñÈ¡Ò»¸öµ¥´Ê·ûºÅ
 {
 	if(CurSymbol->next)
 		CurSymbol=CurSymbol->next;
 	else
 	{
-		error(43);  //è¯­æ³•åˆ†ææ²¡æœ‰å®Œæ¯•ï¼Œéœ€è¦æ ‡è¯†ç¬¦
+		error(43);  //Óï·¨·ÖÎöÃ»ÓĞÍê±Ï£¬ĞèÒª±êÊ¶·û
 		exit(3);
 	}
 
 }
 
-void destroySymbols()  //ç¼–è¯‘å®Œæ¯•ï¼Œå°†ç¬¦å·é“¾è¡¨é‡Šæ”¾
+void destroySymbols()  //±àÒëÍê±Ï£¬½«·ûºÅÁ´±íÊÍ·Å
 {
 	SymbolItem *current,*needDel;
 	current=Symbols;
@@ -1818,9 +2059,9 @@ void destroySymbols()  //ç¼–è¯‘å®Œæ¯•ï¼Œå°†ç¬¦å·é“¾è¡¨é‡Šæ”¾
 }
 
 
-/////////////ä¸‹é¢è¿™ä¸‰ä¸ªå‡½æ•°æ˜¯ä¸ºäº†æ¨¡æ‹Ÿpascalæºç¨‹åºä¸­çš„setç±»å‹è€Œå¼€å‘çš„////////////
+/////////////ÏÂÃæÕâÈı¸öº¯ÊıÊÇÎªÁËÄ£ÄâpascalÔ´³ÌĞòÖĞµÄsetÀàĞÍ¶ø¿ª·¢µÄ////////////
 
-SYMLIST * listsAdd(SYMLIST * list1,SYMLIST * list2)  //ä¸¤ä¸ªâ€œé›†åˆâ€ç›¸åŠ ï¼Œè¿”å›ä¸€ä¸ªâ€œé›†åˆâ€
+SYMLIST * listsAdd(SYMLIST * list1,SYMLIST * list2)  //Á½¸ö¡°¼¯ºÏ¡±Ïà¼Ó£¬·µ»ØÒ»¸ö¡°¼¯ºÏ¡±
 {
 	SYMLIST * temp=new SYMLIST;
 	COPYLIST(temp,list1);
@@ -1828,7 +2069,7 @@ SYMLIST * listsAdd(SYMLIST * list1,SYMLIST * list2)  //ä¸¤ä¸ªâ€œé›†åˆâ€ç›¸åŠ ï
 	return temp;
 }
 		
-SYMLIST * listAddSym(SYMLIST * list,SYMBOL sym)  //ä¸€ä¸ªâ€œé›†åˆâ€åŠ ä¸Šä¸€ä¸ªâ€œå…ƒç´ â€ï¼Œè¿”å›ä¸€ä¸ªâ€œé›†åˆâ€
+SYMLIST * listAddSym(SYMLIST * list,SYMBOL sym)  //Ò»¸ö¡°¼¯ºÏ¡±¼ÓÉÏÒ»¸ö¡°ÔªËØ¡±£¬·µ»ØÒ»¸ö¡°¼¯ºÏ¡±
 {
 	SYMLIST * temp=new SYMLIST;
 	COPYLIST(temp,list);
@@ -1836,19 +2077,19 @@ SYMLIST * listAddSym(SYMLIST * list,SYMBOL sym)  //ä¸€ä¸ªâ€œé›†åˆâ€åŠ ä¸Šä¸€ä¸
 	return temp;
 }
 
-int SYMINLIST(SYMBOL sym,SYMLIST * list)  //åˆ¤æ–­ä¸€ä¸ªâ€œå…ƒç´ â€æ˜¯å¦åœ¨â€œé›†åˆâ€é‡Œé¢
+int SYMINLIST(SYMBOL sym,SYMLIST * list)  //ÅĞ¶ÏÒ»¸ö¡°ÔªËØ¡±ÊÇ·ñÔÚ¡°¼¯ºÏ¡±ÀïÃæ
 {
 	for(POSITION pos=list->GetHeadPosition();pos;)
 	{
 		SYMBOL temp;
 		temp=list->GetNext(pos);
 		if(temp==sym)
-			return 1;  //å¦‚æœåœ¨ï¼Œè¿”å›éé›¶
+			return 1;  //Èç¹ûÔÚ£¬·µ»Ø·ÇÁã
 	}
-	return 0;  //ä¸åœ¨ï¼Œåˆ™è¿”å›é›¶
+	return 0;  //²»ÔÚ£¬Ôò·µ»ØÁã
 }
 
-void COPYLIST(SYMLIST * list1,SYMLIST * list2)  //â€œé›†åˆâ€ä¹‹é—´çš„æ‹·è´
+void COPYLIST(SYMLIST * list1,SYMLIST * list2)  //¡°¼¯ºÏ¡±Ö®¼äµÄ¿½±´
 {
 	for(POSITION pos=list2->GetHeadPosition();pos;)
 	{
@@ -1859,82 +2100,85 @@ void COPYLIST(SYMLIST * list1,SYMLIST * list2)  //â€œé›†åˆâ€ä¹‹é—´çš„æ‹·è´
 }
 
 
-/////////////////////  ä¸»ç¨‹åº  ///////////////////////
+/////////////////////  Ö÷³ÌĞò  ///////////////////////
 int main(int argc, char* argv[])  
 {
-	char srcFilename[FILENAMESIZE];
+	char srcFilename[FILENAMESIZE] = "test.pl";
 	FILE *srcFile;
 	char *srcFileNamePoint;
-
-	if(argc>1)
-		strcpy(srcFilename,argv[1]);
-	else
-	{
-		printf("Please input the source file name : ");
-		scanf("%s",srcFilename);
-	}
+	
+	// if(argc>1)
+	// 	strcpy(srcFilename,argv[1]);
+	// else
+	// {
+	// 	printf("Please input the source file name : ");
+	// 	scanf("%s",srcFilename);
+	// }
 	if(!(srcFile=fopen(srcFilename,"rb")))
 	{
 		printf("Error : source file %s not found\n",srcFilename);
 		exit(1);
 	}
 
-	printf("\nç¬¬ä¸€éï¼šè¯æ³•åˆ†æ");
-	getSymbols(srcFile);//ç¬¬ä¸€éï¼Œå–å¾—æ‰€æœ‰çš„ç¬¦å·ï¼Œç¬¬äºŒéæ‰å¼€å§‹è¯­æ³•åˆ†æå’Œä»£ç ç”Ÿæˆ
+	printf("\nµÚÒ»±é£º´Ê·¨·ÖÎö");
+	getSymbols(srcFile);//µÚÒ»±é£¬È¡µÃËùÓĞµÄ·ûºÅ£¬µÚ¶ş±é²Å¿ªÊ¼Óï·¨·ÖÎöºÍ´úÂëÉú³É
+	printf("µÚ¶ş±é£ºÓï·¨·ÖÎöºÍ´úÂëÉú³É\n");
 
-	printf("ç¬¬äºŒéï¼šè¯­æ³•åˆ†æå’Œä»£ç ç”Ÿæˆ\n");
-	INITIAL();  //åˆå§‹åŒ–
-	ENTERPREID();  //é¢„å¡«ç¬¦å·è¡¨
+	INITIAL();  //³õÊ¼»¯
+	ENTERPREID();  //Ô¤Ìî·ûºÅ±í
 
-	printf("\n**************   ä¸‹é¢æ˜¯éƒ¨åˆ†çš„ç”Ÿæˆä»£ç    ***************\n\n");
+	printf("\n**************   ÏÂÃæÊÇ²¿·ÖµÄÉú³É´úÂë   ***************\n\n");
 	if (CurSymbol->type!=PROGRAMSYM)
-		error(13);  //åº”è¯¥æ˜¯'program'
+		error(13);  //Ó¦¸ÃÊÇ'program'
 	getASymbol();
 	if(CurSymbol->type!=IDENT)
-		error(14);  //åº”è¯¥æ˜¯æ ‡è¯†ç¬¦
+		error(14);  //Ó¦¸ÃÊÇ±êÊ¶·û
 	getASymbol();
 	if(CurSymbol->type!=SEMICOLON)
-		error(1);  //åº”è¯¥æ˜¯';'
+		error(1);  //Ó¦¸ÃÊÇ';'
 	else 
 		getASymbol();
 
+
+	// printf("TEST:before BLOCK\n");
 	//////////////////////////////////////////////////////////
 	SYMLIST * tempList3=new SYMLIST;
 	COPYLIST(tempList3,listsAdd(listAddSym(&DECLBEGSYS,PERIOD),&STATBEGSYS));
 	BLOCK(tempList3,0);
 	delete tempList3;
 	//////////////////////////////////////////////////////////
+	// printf("TEST:after BLOCK\n");
 
 	if(CurSymbol->type!=PERIOD)
-		error(8);  //åº”è¯¥æ˜¯'.'
+		error(8);  //Ó¦¸ÃÊÇ'.'
 	if(nError==0)
 	{
 		for(srcFileNamePoint=&srcFilename[strlen(srcFilename)];*srcFileNamePoint!='.' && srcFileNamePoint!=srcFilename;srcFileNamePoint--)
 		;
-	    *srcFileNamePoint=0;  //åˆ é™¤åé¢çš„æ‰©å±•å
+	    *srcFileNamePoint=0;  //É¾³ıºóÃæµÄÀ©Õ¹Ãû
 		WriteCodeList(strcat(srcFilename,".lst"));
 		for(srcFileNamePoint=&srcFilename[strlen(srcFilename)];*srcFileNamePoint!='.' && srcFileNamePoint!=srcFilename;srcFileNamePoint--)
 			;
-		*srcFileNamePoint=0;  //åˆ é™¤åé¢çš„æ‰©å±•å
+		*srcFileNamePoint=0;  //É¾³ıºóÃæµÄÀ©Õ¹Ãû
 		WriteObjCode(strcat(srcFilename,".pld"));
 		for(srcFileNamePoint=&srcFilename[strlen(srcFilename)];*srcFileNamePoint!='.' && srcFileNamePoint!=srcFilename;srcFileNamePoint--)
 			;
-		*srcFileNamePoint=0;  //åˆ é™¤åé¢çš„æ‰©å±•å
+		*srcFileNamePoint=0;  //É¾³ıºóÃæµÄÀ©Õ¹Ãû
 		WriteLabelCode(strcat(srcFilename,".lab"));
 		destroySymbols();
 		fclose(srcFile);
 		
-		//printf("\nç¼–è¯‘æˆåŠŸï¼è¯·è¾“å…¥ä»»ä½•å­—ç¬¦é€€å‡ºã€‚");
-		printf("\nç¼–è¯‘æˆåŠŸï¼");
+		//printf("\n±àÒë³É¹¦£¡ÇëÊäÈëÈÎºÎ×Ö·ûÍË³ö¡£");
+		printf("\n±àÒë³É¹¦£¡");
 		
 		//int a;
-		//scanf("%d",a);       //ä¸€ä¸ªç®€å•çš„å…³å¡ï¼Œç¨‹åºæ‰§è¡Œå®Œæ¯•åå¯ä»¥åœä¸‹ï¼Œæ‚¨å¯ä»¥è§‚çœ‹ç”Ÿæˆçš„ä»£ç ï¼Œæ³¨æ„ï¼Œä»£ç æ˜¯éƒ¨åˆ†çš„ï¼Œæœ‰äº›æ“ä½œæ•°æ²¡æœ‰å¡«ä¸Šå»
+		//scanf("%d",a);       //Ò»¸ö¼òµ¥µÄ¹Ø¿¨£¬³ÌĞòÖ´ĞĞÍê±Ïºó¿ÉÒÔÍ£ÏÂ£¬Äú¿ÉÒÔ¹Û¿´Éú³ÉµÄ´úÂë£¬×¢Òâ£¬´úÂëÊÇ²¿·ÖµÄ£¬ÓĞĞ©²Ù×÷ÊıÃ»ÓĞÌîÉÏÈ¥
 		return 0;
 	}
 	destroySymbols();
 	
 	//int b;
-	//scanf("%d",b);     //ä¸€ä¸ªç®€å•çš„å…³å¡ï¼Œç¨‹åºæ‰§è¡Œå®Œæ¯•åå¯ä»¥åœä¸‹ï¼Œæ‚¨å¯ä»¥è§‚çœ‹ç”Ÿæˆçš„ä»£ç ï¼Œæ³¨æ„ï¼Œä»£ç æ˜¯éƒ¨åˆ†çš„ï¼Œæœ‰äº›æ“ä½œæ•°æ²¡æœ‰å¡«ä¸Šå»
+	//scanf("%d",b);     //Ò»¸ö¼òµ¥µÄ¹Ø¿¨£¬³ÌĞòÖ´ĞĞÍê±Ïºó¿ÉÒÔÍ£ÏÂ£¬Äú¿ÉÒÔ¹Û¿´Éú³ÉµÄ´úÂë£¬×¢Òâ£¬´úÂëÊÇ²¿·ÖµÄ£¬ÓĞĞ©²Ù×÷ÊıÃ»ÓĞÌîÉÏÈ¥
 	return 0;
 }
 
